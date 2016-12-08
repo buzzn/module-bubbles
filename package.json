@@ -4,7 +4,7 @@
   "description": "",
   "main": "dist/index.js",
   "scripts": {
-    "test": "mocha --compilers js:babel-register --require babel-polyfill $(find . -name '*.tests.js' ! -ipath '*node_modules*')",
+    "test": "mocha --compilers js:babel-register --require babel-polyfill --require tests-setup.js --require ignore-styles $(find . -name '*.tests.js' ! -ipath '*node_modules*')",
     "dev-server": "webpack-dashboard -- webpack-dev-server --progress --inline --hot --port=2999",
     "build": "rimraf build && webpack --config ./webpack.production.config.js --progress --profile --colors",
     "postinstall": "babel app/ -d dist/"

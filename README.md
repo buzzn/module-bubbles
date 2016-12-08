@@ -1,5 +1,5 @@
-[ ![Codeship Status for buzzn/module-consumer-form](https://app.codeship.com/projects/867cccd0-99df-0134-8de6-3e4c54ed65a2/status?branch=master)](https://app.codeship.com/projects/187835)
-# module-powertaker-form
+[ ![Codeship Status for buzzn/module-bubbles](https://app.codeship.com/projects/57783ed0-9f59-0134-f7d3-666295f6c944/status?branch=master)](https://app.codeship.com/projects/189258)
+# module-bubbles
 
 To run local dev server:
 - clone this repository
@@ -33,32 +33,42 @@ To use linter:
 - add eslint plugin to your favorite editor
 
 How to use this module in app:
-- add it as a dependency in package.json (replace v1.0.3 with required tag):
+- add it as a dependency in package.json (replace v1.0.0 with required tag):
 ```
-"@buzzn/module_auth": "git+https://github.com/buzzn/module-auth.git#v1.0.3"
+"@buzzn/module_bubbles": "git+https://github.com/buzzn/module-bubbles.git#v1.0.0"
 ```
-- add PowerForm reducers to app reducers:
+- add Bubbles reducers to app reducers:
 ```
 import { combineReducers } from 'redux';
-import PowerForm from '@buzzn/module_powertaker_form';
+import Bubbles from '@buzzn/module_bubbles';
 
 export default combineReducers({
-  [PowerForm.constants.MOUNT_POINT]: PowerForm.reducers,
+  bubbles: Bubbles.reducers,
 });
 ```
-- run Auth saga in saga middleware:
+- run Bubbles saga in saga middleware:
 ```
-import PowerForm from '@buzzn/module_powertaker_form';
+import Bubbles from '@buzzn/module_bubbles';
 import appSaga from './sagas';
 
 function* rootSaga() {
-  yield [call(PowerForm.sagas), call(appSaga)];
+  yield [call(Bubbles.sagas), call(appSaga)];
 }
 // ...
 // store configuration
   sagaMiddleware.run(rootSaga);
 // ...
 ```
-- dispatch PowerForm.actions.startForm({ apiUrl, apiPath, token }) and PowerForm.actions.cleanState() to start/clean the form
-- add PowerForm react component to UI: PowerForm.container
-- as of 06.12.2016 this module is only working with proper token. @buzzn/module_auth can be used to get one.
+- mount bubbles component in react UI:
+```
+import Bubbles from '@buzzn/module_bubbles';
+// ...
+// somewhere in UI
+<Bubbles.container />
+// ...
+```
+- dispatch setGroup action with groupId:
+```
+Bubbles.actions.setGroup(group)
+```
+- this module relies on config part of a redux state. (should be changed)

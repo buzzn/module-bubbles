@@ -112,7 +112,7 @@ export class Bubbles extends Component {
           seeded: false,
           updating: false,
         };
-        if (point.attributes.mode === 'in') {
+        if (point.attributes.direction === 'in') {
           inData.push(Object.assign({}, pointObj, { color: inColor, outPoint: false }));
         } else {
           outData.push(Object.assign({}, pointObj, { color: outColor, outPoint: true, startAngle: 0, endAngle: 0 }));
@@ -175,7 +175,7 @@ export class Bubbles extends Component {
       forEach(inData, (point, idx) => {
         if (inData[idx].updating) return;
         inData[idx].updating = true;
-        fetch(`${url}/api/v1/aggregates/present?metering_point_ids=${point.id}`, { headers })
+        fetch(`${url}/api/v1/aggregates/present?register_ids=${point.id}`, { headers })
           .then(getJson)
           .then(json => {
             inData[idx].value = Math.floor(Math.abs(json.power_milliwatt)) || 0;
@@ -190,7 +190,7 @@ export class Bubbles extends Component {
       forEach(outData, (point, idx) => {
         if (outData[idx].updating) return;
         outData[idx].updating = true;
-        fetch(`${url}/api/v1/aggregates/present?metering_point_ids=${point.id}`, { headers })
+        fetch(`${url}/api/v1/aggregates/present?register_ids=${point.id}`, { headers })
           .then(getJson)
           .then(json => {
             outData[idx].value = Math.floor(Math.abs(json.power_milliwatt)) || 0;
@@ -418,7 +418,7 @@ export class Bubbles extends Component {
     }, 500);
 
     function getMeteringPoints(page = 1) {
-      fetch(`${url}/api/v1/groups/${group}/metering-points?per_page=10&page=${page}`, { headers })
+      fetch(`${url}/api/v1/groups/${group}/registers?per_page=10&page=${page}`, { headers })
         .then(getJson)
         .then(json => {
           if (json.data.length === 0) return Promise.reject('Empty group');

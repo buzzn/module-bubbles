@@ -228,8 +228,8 @@ export class Bubbles extends Component {
         .style('opacity', 1)
         .style('display', 'block');
       tooltip.html(`<b>Name: </b>${data.name}<br /><b>Power: </b>${formatPower(data.value)} Watt`)
-        .style('left', `${d3.event.pageX + 20}px`)
-        .style('top', `${d3.event.pageY - 20}px`);
+        .style('left', `${d3.event.offsetX + 20}px`)
+        .style('top', `${d3.event.offsetY - 20}px`);
     }
 
     function hideDetails(data, i, element) {

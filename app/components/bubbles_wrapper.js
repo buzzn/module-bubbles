@@ -6,13 +6,11 @@ import InfoPanel from './info_panel';
 import { actions } from '../actions';
 
 export const BubblesWrapper = props => (
-  <div>
-    { <props.layout { ...props } Bubbles={ Bubbles } InfoPanel={ InfoPanel } /> }
-  </div>
+  <props.Layout { ...props } Bubbles={ Bubbles } InfoPanel={ InfoPanel } />
 );
 
 BubblesWrapper.defaultProps = {
-  layout: BubblesLayout,
+  Layout: BubblesLayout,
 };
 
 function mapStateToProps(state) {

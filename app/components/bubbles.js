@@ -69,6 +69,7 @@ export class Bubbles extends Component {
     // const height = +svg.attr('height');
     const inColor = '#5FA2DD';
     const outColor = '#F76C51';
+    const outScale = 1.2;
     const borderWidth = '3px';
     const inData = [];
     const outData = [];
@@ -146,18 +147,18 @@ export class Bubbles extends Component {
     function outCombined() {
       return [{
         id: 'outBubble',
-        value: reduce(outData, (s, d) => s + d.value, 0),
+        value: reduce(outData, (s, d) => s + d.value, 0) * outScale,
         name: 'Power produced',
         outPoint: true,
       }];
     }
 
     function recalculateAngles() {
-      const totalPower = reduce(outData, (s, d) => s + d.value, 0);
+      const totalPower = reduce(outData, (s, d) => s + d.value, 0) * outScale;
       let startAngle = 0;
       forEach(outData, (data, idx) => {
         if (data.value === 0) return;
-        let endAngle = (data.value / totalPower * 2 * Math.PI + startAngle) || 0;
+        let endAngle = (data.value * outScale / totalPower * 2 * Math.PI + startAngle) || 0;
         if (outData.length > 1 && endAngle > 0.015) endAngle -= 0.015;
         outData[idx].startAngle = startAngle;
         outData[idx].endAngle = endAngle;
@@ -250,7 +251,7 @@ export class Bubbles extends Component {
     function scaleCenterForce(val) {
       const sortedData = sortBy(inData, d => d.value);
       return d3.scaleLinear()
-        .domain([first(sortedData).value, last(sortedData).value])
+        .domain([last(sortedData).value, first(sortedData).value])
         .range([0.004, 0.0005])
         .clamp(true)(val);
     }

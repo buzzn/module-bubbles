@@ -28,7 +28,7 @@ export class Bubbles extends Component {
   static propTypes = {
     url: React.PropTypes.string.isRequired,
     group: React.PropTypes.string.isRequired,
-  }
+  };
 
   render() {
     const { group } = this.props;
@@ -418,14 +418,17 @@ export class Bubbles extends Component {
         .restart();
     }, 500);
 
-    function getMeteringPoints(page = 1) {
-      fetch(`${url}/api/v1/groups/${group}/registers?per_page=10&page=${page}`, { headers })
+    function getMeteringPoints(page = 1, paginated) {
+      let registersUrl = `${url}/api/v1/groups/${group}/registers`;
+      if (paginated) registersUrl = `${url}/api/v1/groups/${group}/registers?per_page=10&page=${page}`;
+
+      fetch(registersUrl, { headers })
         .then(getJson)
         .then(json => {
           if (json.data.length === 0) return Promise.reject('Empty group');
           fillPoints(json.data);
-          if (json.meta.total_pages > page) {
-            getMeteringPoints(page + 1);
+          if (json.meta && json.meta.total_pages > page) {
+            getMeteringPoints(page + 1, true);
           } else {
             getData();
             self.setState({ fetchTimer: setInterval(getData, 10000) });

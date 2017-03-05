@@ -22,6 +22,7 @@ export class Bubbles extends Component {
       fetchTimer: null,
       drawTimer: null,
       seedTimer: null,
+      token: null,
     };
   }
 
@@ -55,6 +56,18 @@ export class Bubbles extends Component {
           </div>;
   }
 
+  shouldComponentUpdate(nextProps) {
+    if (nextProps.token !== this.state.token) {
+      this.setState({ token: nextProps.token });
+    }
+    return false;
+  }
+
+  componentWillMount() {
+    const { token } = this.props;
+    this.setState({ token });
+  }
+
   componentDidMount() {
     const self = this;
     const { url, group, setData, setLoading, setLoaded } = this.props;
@@ -73,15 +86,21 @@ export class Bubbles extends Component {
     const borderWidth = '3px';
     const inData = [];
     const outData = [];
-    const headers = {
-      Accept: 'application/json',
-    };
     let circle = null;
     let outCircle = null;
     let simulation = null;
     let path = null;
     let arc = null;
     const tooltip = d3.select(`#tooltip-${group}`);
+
+    function prepareHeaders() {
+      const headers = {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      };
+      if (self.state.token) headers.Authorization = `Bearer ${self.state.token}`;
+      return headers;
+    }
 
     function setSize() {
       const svgDom = document.querySelector(`#group-${group}`);
@@ -176,7 +195,7 @@ export class Bubbles extends Component {
       forEach(inData, (point, idx) => {
         if (inData[idx].updating) return;
         inData[idx].updating = true;
-        fetch(`${url}/api/v1/aggregates/present?register_ids=${point.id}`, { headers })
+        fetch(`${url}/api/v1/aggregates/present?register_ids=${point.id}`, { headers: prepareHeaders() })
           .then(getJson)
           .then(json => {
             inData[idx].value = Math.floor(Math.abs(json.power_milliwatt)) || 0;
@@ -191,7 +210,7 @@ export class Bubbles extends Component {
       forEach(outData, (point, idx) => {
         if (outData[idx].updating) return;
         outData[idx].updating = true;
-        fetch(`${url}/api/v1/aggregates/present?register_ids=${point.id}`, { headers })
+        fetch(`${url}/api/v1/aggregates/present?register_ids=${point.id}`, { headers: prepareHeaders() })
           .then(getJson)
           .then(json => {
             outData[idx].value = Math.floor(Math.abs(json.power_milliwatt)) || 0;
@@ -422,7 +441,7 @@ export class Bubbles extends Component {
       let registersUrl = `${url}/api/v1/groups/${group}/registers`;
       if (paginated) registersUrl = `${url}/api/v1/groups/${group}/registers?per_page=10&page=${page}`;
 
-      fetch(registersUrl, { headers })
+      fetch(registersUrl, { headers: prepareHeaders() })
         .then(getJson)
         .then(json => {
           if (json.data.length === 0) return Promise.reject('Empty group');

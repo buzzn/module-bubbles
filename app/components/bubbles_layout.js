@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default ({ group, url, summedData, loading, setData, setLoading, setLoaded, Bubbles, InfoPanel }) => (
+export default ({ group, url, summedData, loading, setData, setLoading, setLoaded, Bubbles, InfoPanel, token }) => (
   <div className="col-sm-12 col-md-6 col-lg-6 bubbles-wrapper">
     <div className="row">
       <div className="col-sm-12 col-md-6 col-lg-6">
@@ -19,7 +19,8 @@ export default ({ group, url, summedData, loading, setData, setLoading, setLoade
                 group={ group }
                 setData={ setData }
                 setLoading={ setLoading }
-                setLoaded={ setLoaded } />
+                setLoaded={ setLoaded }
+                token={ token } />
             }
           </div>
           <div className="basic-loading" style={{

@@ -21,7 +21,6 @@ export class Bubbles extends Component {
     this.state = {
       fetchTimer: null,
       drawTimer: null,
-      seedTimer: null,
       token: null,
     };
   }
@@ -129,7 +128,6 @@ export class Bubbles extends Component {
           y: d3.scaleLinear()
             .domain([0, fullHeight])
             .range([fullHeight * 0.4, fullHeight * 0.6])(Math.random() * fullHeight),
-          seeded: false,
           updating: false,
         };
         if (point.attributes.direction === 'in') {
@@ -199,7 +197,6 @@ export class Bubbles extends Component {
           .then(getJson)
           .then(json => {
             inData[idx].value = Math.floor(Math.abs(json.power_milliwatt)) || 0;
-            inData[idx].seeded = true;
             inData[idx].updating = false;
           })
           .catch(error => {
@@ -215,7 +212,6 @@ export class Bubbles extends Component {
           .then(json => {
             outData[idx].value = Math.floor(Math.abs(json.power_milliwatt)) || 0;
             recalculateAngles();
-            outData[idx].seeded = true;
             outData[idx].updating = false;
           })
           .catch(error => {
@@ -451,14 +447,9 @@ export class Bubbles extends Component {
           } else {
             getData();
             self.setState({ fetchTimer: setInterval(getData, 10000) });
-            self.setState({ seedTimer: setInterval(() => {
-              if (!find(inData, d => !d.seeded) && !find(outData, d => !d.seeded)) {
-                clearInterval(self.state.seedTimer);
-                setLoaded();
-                drawData();
-                self.setState({ drawTimer: setInterval(redrawData, 10000) });
-              }
-            }, 2000) });
+            setLoaded();
+            drawData();
+            self.setState({ drawTimer: setInterval(redrawData, 10000) });
           }
         })
         .catch(error => {
@@ -477,7 +468,6 @@ export class Bubbles extends Component {
   componentWillUnmount() {
     clearInterval(this.state.fetchTimer);
     clearInterval(this.state.drawTimer);
-    clearInterval(this.state.seedTimer);
     window.removeEventListener('resize', this.onResize);
   }
 }

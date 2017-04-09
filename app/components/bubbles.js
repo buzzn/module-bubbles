@@ -26,8 +26,8 @@ export class Bubbles extends Component {
   }
 
   static propTypes = {
-    url: React.PropTypes.string.isRequired,
-    group: React.PropTypes.string.isRequired,
+    url: PropTypes.string.isRequired,
+    group: PropTypes.string.isRequired,
   };
 
   render() {

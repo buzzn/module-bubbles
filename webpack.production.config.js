@@ -57,10 +57,6 @@ module.exports = {
         test: /\.(eot|ttf|svg|gif|png)(\?[\s\S]+)?$/,
         loader: 'file-loader',
       },
-      {
-        test: /\.json?$/,
-        loader: 'json-loader',
-      },
     ],
   },
   plugins: [
@@ -70,7 +66,7 @@ module.exports = {
     new webpack.ProvidePlugin({
       'window.Tether': 'tether',
     }),
-    new webpack.NoErrorsPlugin(),
+    new webpack.NoEmitOnErrorsPlugin(),
     new webpack.LoaderOptionsPlugin({
       minimize: true,
       debug: false,
@@ -81,7 +77,6 @@ module.exports = {
         },
       },
     }),
-    new webpack.optimize.DedupePlugin(),
     new webpack.optimize.AggressiveMergingPlugin(),
     new HtmlWebpackPlugin({
       template: 'app/index.html',

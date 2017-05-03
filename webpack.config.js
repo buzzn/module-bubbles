@@ -11,7 +11,8 @@ module.exports = {
     'react-hot-loader/patch',
     'webpack/hot/only-dev-server',
     'whatwg-fetch',
-    './app/index.js',
+    // './app/index.js',
+    './app/index.dev.js',
   ],
   output: {
     path: path.resolve(__dirname, 'build'),

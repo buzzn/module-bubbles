@@ -1,9 +1,9 @@
 import React from 'react';
 import { connect } from 'react-redux';
+import reduce from 'lodash/reduce';
 import BubblesLayout from './bubbles_layout';
 import Bubbles from './bubbles';
 import InfoPanel from './info_panel';
-import { actions } from '../actions';
 
 export const BubblesWrapper = props => (
   <props.Layout { ...props } Bubbles={ Bubbles } InfoPanel={ InfoPanel } />
@@ -14,20 +14,19 @@ BubblesWrapper.defaultProps = {
 };
 
 function mapStateToProps(state) {
+  function sumPower({ direction, registers }) {
+    const power = reduce(registers, (res, reg) => (reg.mode === direction ? res + reg.value : res), 0);
+    const powerArr = power.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,').split(',');
+    powerArr.pop();
+    return powerArr.join('.');
+  }
+
   return {
-    // TODO: replace with ownProps parameter
-    url: state.config.apiUrl,
-    // TODO: replace 'bubbles' with 'mountedPath' ownProps parameter or constant
-    group: state.bubbles.group,
-    summedData: state.bubbles.summedData,
+    registers: state.bubbles.registers,
     loading: state.bubbles.loading,
+    summedIn: sumPower({ direction: 'in', registers: state.bubbles.registers }),
+    summedOut: sumPower({ direction: 'out', registers: state.bubbles.registers }),
   };
 }
 
-const mappedActions = {
-  setData: actions.setData,
-  setLoading: actions.loading,
-  setLoaded: actions.loaded,
-};
-
-export default connect(mapStateToProps, mappedActions)(BubblesWrapper);
+export default connect(mapStateToProps)(BubblesWrapper);

@@ -117,12 +117,13 @@ export class Bubbles extends Component {
     }
 
     function fillPoints(pointsArr) {
-      forEach(pointsArr, (point) => {
+      forEach(pointsArr, (pointRaw) => {
+        const point = pointRaw.attributes ? { id: pointRaw.id, ...pointRaw.attributes } : pointRaw;
         const pointObj = {
           id: point.id,
           value: 0,
           r: 0,
-          name: point.attributes.name,
+          name: point.name,
           x: d3.scaleLinear()
             .domain([0, fullWidth])
             .range([fullWidth * 0.4, fullWidth * 0.6])(Math.random() * fullWidth),
@@ -131,7 +132,7 @@ export class Bubbles extends Component {
             .range([fullHeight * 0.4, fullHeight * 0.6])(Math.random() * fullHeight),
           updating: false,
         };
-        if (point.attributes.direction === 'in') {
+        if (point.direction === 'in') {
           inData.push(Object.assign({}, pointObj, { color: inColor, outPoint: false }));
         } else {
           outData.push(Object.assign({}, pointObj, { color: outColor, outPoint: true, startAngle: 0, endAngle: 0 }));
@@ -194,7 +195,7 @@ export class Bubbles extends Component {
       forEach(inData, (point, idx) => {
         if (inData[idx].updating) return;
         inData[idx].updating = true;
-        fetch(`${url}/api/v1/aggregates/present?register_ids=${point.id}`, { headers: prepareHeaders() })
+        fetch(`${url}api/v1/aggregates/present?register_ids=${point.id}`, { headers: prepareHeaders() })
           .then(getJson)
           .then(json => {
             inData[idx].value = Math.floor(Math.abs(json.power_milliwatt)) || 0;
@@ -208,7 +209,7 @@ export class Bubbles extends Component {
       forEach(outData, (point, idx) => {
         if (outData[idx].updating) return;
         outData[idx].updating = true;
-        fetch(`${url}/api/v1/aggregates/present?register_ids=${point.id}`, { headers: prepareHeaders() })
+        fetch(`${url}api/v1/aggregates/present?register_ids=${point.id}`, { headers: prepareHeaders() })
           .then(getJson)
           .then(json => {
             outData[idx].value = Math.floor(Math.abs(json.power_milliwatt)) || 0;
@@ -434,24 +435,18 @@ export class Bubbles extends Component {
         .restart();
     }, 500);
 
-    function getMeteringPoints(page = 1, paginated) {
-      let registersUrl = `${url}/api/v1/groups/${group}/registers`;
-      if (paginated) registersUrl = `${url}/api/v1/groups/${group}/registers?per_page=10&page=${page}`;
-
-      fetch(registersUrl, { headers: prepareHeaders() })
+    function getMeteringPoints() {
+      fetch(`${url}api/v1/groups/${group}/registers`, { headers: prepareHeaders() })
         .then(getJson)
-        .then(json => {
-          if (json.data.length === 0) return Promise.reject('Empty group');
-          fillPoints(json.data);
-          if (json.meta && json.meta.total_pages > page) {
-            getMeteringPoints(page + 1, true);
-          } else {
-            getData();
-            self.setState({ fetchTimer: setInterval(getData, 10000) });
-            setLoaded();
-            drawData();
-            self.setState({ drawTimer: setInterval(redrawData, 10000) });
-          }
+        .then(jsonRaw => {
+          const json = jsonRaw.data ? jsonRaw.data : jsonRaw;
+          if (json.length === 0) return Promise.reject('Empty group');
+          fillPoints(json);
+          getData();
+          self.setState({ fetchTimer: setInterval(getData, 10000) });
+          setLoaded();
+          drawData();
+          self.setState({ drawTimer: setInterval(redrawData, 10000) });
         })
         .catch(error => {
           console.log(error);

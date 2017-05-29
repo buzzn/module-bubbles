@@ -15,7 +15,9 @@ BubblesWrapper.defaultProps = {
 
 function mapStateToProps(state) {
   function sumPower({ direction, registers }) {
-    const power = reduce(registers, (res, reg) => (reg.mode === direction ? res + reg.value : res), 0);
+    const inLabels = ['consumption'];
+    const outLabels = ['production_pv', 'production_chp'];
+    const power = reduce(registers, (res, reg) => ((direction === 'in' ? inLabels : outLabels).includes(reg.label) ? res + reg.value : res), 0);
     const powerArr = power.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,').split(',');
     powerArr.pop();
     return powerArr.join('.');

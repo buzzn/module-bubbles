@@ -1,6 +1,8 @@
 import 'whatwg-fetch';
 import range from 'lodash/range';
-import { prepareHeaders, parseResponse } from './_util';
+import filter from 'lodash/filter';
+import find from 'lodash/find';
+import { prepareHeaders, parseResponse, camelizeResponseArray, camelizeResponseKeys } from './_util';
 
 function guid() {
   return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
@@ -33,6 +35,21 @@ const mainPoints = mainOutPoints.concat(mainInPoints);
 
 export default {
   fetchGroupBubbles({ apiUrl, apiPath, token, groupId }) {
+    return fetch(`${apiUrl}${apiPath}/groups/${groupId}/registers`, {
+      headers: prepareHeaders(token),
+    })
+    .then(parseResponse)
+    .then(camelizeResponseArray)
+    .then(registers => {
+      return fetch(`${apiUrl}${apiPath}/groups/${groupId}/bubbles`, {
+        headers: prepareHeaders(token),
+      })
+      .then(parseResponse)
+      .then(camelizeResponseKeys)
+      .then(bubbles => filter(bubbles.array, b => find(registers, r => r.id === b.resourceId)).map(b => ({ ...b, id: b.resourceId, label: find(registers, r => r.id === b.resourceId).label })));
+    });
+  },
+  fetchGroupBubblesFake({ apiUrl, apiPath, token, groupId }) {
     const newMainPoints = mainPoints.map(p => ({ ...p, value: getRandomIntInclusive(5000, 10000) }));
     const outPoints = range(getRandomIntInclusive(0, 2)).map(num => ({ resource_id: guid(), mode: 'out', value: getRandomIntInclusive(80000, 180000), label: generateLabel() }));
     const inPoints = range(getRandomIntInclusive(0, 10)).map(num => ({ c: true, resource_id: guid(), mode: 'in', value: getRandomIntInclusive(0, 10000), label: 'consumption' }));

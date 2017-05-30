@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import filter from 'lodash/filter';
 import forEach from 'lodash/forEach';
 import reduce from 'lodash/reduce';
+import map from 'lodash/map';
 import find from 'lodash/find';
 import findIndex from 'lodash/findIndex';
 import sortBy from 'lodash/sortBy';
@@ -25,6 +26,8 @@ export class Bubbles extends Component {
     this.outData = [];
     this.inColor = 'rgba(128, 222, 234, 0.8)';
     this.outColor = '#D4E157';
+    this.productionPvColor = '#ffeb3b';
+    this.productionChpColor = '#ffa726';
     this.fullWidth = null;
     this.width = null;
     this.fullHeight = null;
@@ -35,6 +38,8 @@ export class Bubbles extends Component {
     this.circle = null;
     this.outCircle = null;
     this.outArc = null;
+    this.outSources = [];
+    this.outSourcesArc = null;
     this.clock = null;
     this.updateClock = null;
     this.ticker = true;
@@ -50,6 +55,7 @@ export class Bubbles extends Component {
       'dataWeight',
       'radius',
       'outCombined',
+      'recalculateAngles',
       'formatPower',
       'ticked',
       'scaleCenterForce',
@@ -118,6 +124,7 @@ export class Bubbles extends Component {
       c: point.c,
       id: point.id,
       value: point.value,
+      label: point.label,
       // r: 0,
       // x: d3.scaleLinear()
       // .domain([0, this.fullWidth])
@@ -125,8 +132,8 @@ export class Bubbles extends Component {
       // y: d3.scaleLinear()
       // .domain([0, this.fullHeight])
       // .range([this.fullHeight * 0.4, this.fullHeight * 0.6])(Math.random() * this.fullHeight),
-      color: point.mode === 'in' ? this.inColor : this.outColor,
-      outPoint: point.mode === 'out',
+      // color: point.mode === 'in' ? this.inColor : this.outColor,
+      // outPoint: point.mode === 'out',
     });
 
     forEach(pointsArr, (point) => {
@@ -173,9 +180,43 @@ export class Bubbles extends Component {
   outCombined() {
     return [{
       id: 'outBubble',
-      value: reduce(this.outData, (s, d) => s + d.value, 0) * this.outScale,
-      outPoint: true,
+      value: reduce(this.outData, (s, d) => s + d.value, 0),
     }];
+  }
+
+  recalculateAngles() {
+    const totalPower = reduce(this.outData, (s, d) => s + d.value, 0);
+    const sources = {};
+    const setColor = (label) => {
+      switch (label) {
+        case 'production_pv':
+          return this.productionPvColor;
+        case 'production_chp':
+          return this.productionChpColor;
+        default:
+          return this.outColor;
+      }
+    };
+    forEach(this.outData, (d) => {
+      if (!sources[d.label]) sources[d.label] = { color: setColor(d.label), value: 0 };
+      sources[d.label].value += d.value;
+    });
+    const outSources = map(sources, (v, k) => ({ id: k, source: k, ...v }));
+
+    let startAngle = 0;
+    forEach(outSources, (data, idx) => {
+      if (data.value === 0) return;
+      let endAngle = (data.value / totalPower * 2 * Math.PI + startAngle) || 0;
+      outSources[idx].startAngle = startAngle;
+      outSources[idx].endAngle = endAngle;
+      startAngle = endAngle;
+      const resIdx = findIndex(this.outSources, s => s.source === data.source);
+      if (resIdx > -1) {
+        this.outSources[resIdx] = { ...outSources[idx], old: this.outSources[resIdx].old };
+      } else {
+        this.outSources.push(outSources[idx]);
+      }
+    });
   }
 
   formatPower(power) {
@@ -198,8 +239,6 @@ export class Bubbles extends Component {
   }
 
   drawData() {
-    console.warn('draw')
-
     const isProducing = reduce(this.outData, (s, d) => s + d.value, 0) >= reduce(this.inData.children, (s, d) => s + d.value, 0);
 
     this.svgD3.append('g').classed('bubbles', true);
@@ -211,7 +250,7 @@ export class Bubbles extends Component {
     .classed('clock-left', true)
     .attr('x', '180')
     .attr('y', '580')
-    .style('font-size', '260')
+    .style('font-size', '260px')
     .style('font-family', 'Asap-Regular, Helvetica')
     .style('color', '#4a4a4a');
 
@@ -220,7 +259,7 @@ export class Bubbles extends Component {
     .classed('clock-right', true)
     .attr('x', '520')
     .attr('y', '580')
-    .style('font-size', '260')
+    .style('font-size', '260px')
     .style('font-family', 'Asap-Regular, Helvetica')
     .style('color', '#4a4a4a');
 
@@ -258,6 +297,23 @@ export class Bubbles extends Component {
     .attr('cx', () => this.fullWidth / 2)
     .attr('cy', () => this.fullHeight / 2);
 
+    this.recalculateAngles();
+
+    const arc = d3.arc()
+    .startAngle(d => d.startAngle)
+    .endAngle(d => d.endAngle)
+    .innerRadius(this.width / 2 - 50)
+    .outerRadius(this.width / 2 - 30);
+
+    this.outSourcesArc = this.svgD3.select('.bubbles').selectAll('.out-source')
+    .data(this.outSources, this.dataId)
+    .enter()
+    .append('path')
+    .classed('out-source', true)
+    .attr('d', arc)
+    .attr('transform', `translate(${this.width / 2}, ${this.height / 2})`)
+    .style('fill', d => d.color);
+
     this.hierarchy = d3.hierarchy(this.inData).sum(d => d.value)//.sort((a, b) => (a.value - b.value));
 
     this.pack = d3.pack().size([this.fullWidth - 20, this.fullHeight - 20]);
@@ -275,7 +331,6 @@ export class Bubbles extends Component {
   }
 
   redrawData() {
-    console.warn('redraw')
     this.hierarchy = d3.hierarchy(this.inData).sum(d => d.value)//.sort((a, b) => (a.value - b.value));
 
     const isProducing = reduce(this.outData, (s, d) => s + d.value, 0) >= reduce(this.inData.children, (s, d) => s + d.value, 0);
@@ -290,6 +345,47 @@ export class Bubbles extends Component {
       scale = 2;
       margin = 260;
     }
+
+    this.recalculateAngles();
+
+    const arc = d3.arc()
+    .startAngle(d => d.startAngle)
+    .endAngle(d => d.endAngle)
+    .innerRadius(this.width / 2 - 50)
+    .outerRadius(this.width / 2 - 30);
+
+    this.outSourcesArc = this.svgD3.select('.bubbles').selectAll('.out-source');
+
+    this.outSourcesArc.data(this.outSources, this.dataId)
+    .enter()
+    .append('path')
+    .classed('out-source', true)
+    .attr('transform', `translate(${this.width / 2}, ${this.height / 2})`)
+    .transition()
+    .ease(d3.easeExpOut)
+    .duration(1000)
+    .attr('d', arc)
+    .style('fill', d => d.color)
+    .style('opacity', isProducing ? 1 : 0);
+
+    this.outSourcesArc
+    .style('fill', d => d.color)
+    .transition()
+    .ease(d3.easeExpOut)
+    .duration(1000)
+    .style('opacity', isProducing ? 1 : 0)
+    .attrTween('d', function (d) {
+      const i = d3.interpolate(d.old, d);
+      d.old = i(0);
+      return (t) => arc(i(t));
+    });
+
+    this.outSourcesArc.data(this.outSources, this.dataId)
+    .exit()
+    .transition()
+    .duration(200)
+    .style('opacity', 0)
+    .remove();
 
     this.pack = d3.pack().size([this.fullWidth / scale - 20, this.fullHeight / scale - 20]);
 

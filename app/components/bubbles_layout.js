@@ -1,14 +1,8 @@
 import React from 'react';
 
-export default ({ registers, loading, Bubbles, InfoPanel, summedIn, summedOut }) => (
+export default ({ registers, loading, Bubbles }) => (
   <div className="col-sm-12 col-md-6 col-lg-6 bubbles-wrapper">
     <div className="row">
-      <div className="col-sm-12 col-md-6 col-lg-6">
-        <InfoPanel type="in" data={ summedIn } />
-      </div>
-      <div className="col-sm-12 col-md-6 col-lg-6">
-        <InfoPanel type="out" data={ summedOut } />
-      </div>
       <div className="col-sm-12 col-md-12 col-lg-12">
         <div className="panel" style={{ position: 'relative' }}>
           <div style={{ width: '100%', height: '453px', display: 'inline-block', position: 'relative' }}>

@@ -2,7 +2,7 @@ import 'whatwg-fetch';
 import range from 'lodash/range';
 import filter from 'lodash/filter';
 import find from 'lodash/find';
-import { prepareHeaders, parseResponse, camelizeResponseArray, camelizeResponseKeys } from './_util';
+import { prepareHeaders, parseResponse, camelizeResponseKeys } from './_util';
 
 function guid() {
   return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
@@ -39,8 +39,9 @@ export default {
       headers: prepareHeaders(token),
     })
     .then(parseResponse)
-    .then(camelizeResponseArray)
-    .then(registers => {
+    .then(camelizeResponseKeys)
+    .then(registersRes => {
+      const registers = registersRes.array;
       return fetch(`${apiUrl}${apiPath}/groups/${groupId}/bubbles`, {
         headers: prepareHeaders(token),
       })

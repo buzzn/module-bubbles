@@ -9,7 +9,7 @@ export const constants = {
 
 export const actions = {
   setApiParams: ({ apiUrl, apiPath }) => ({ type: constants.SET_API_PARAMS, apiUrl, apiPath }),
-  setToken: ({ token }) => ({ type: constants.SET_TOKEN, token }),
+  setToken: token => ({ type: constants.SET_TOKEN, token }),
   setGroupId: groupId => ({ type: constants.SET_GROUP_ID, groupId }),
   setRegisters: registers => ({ type: constants.SET_REGISTERS, registers }),
   loading: () => ({ type: constants.LOADING }),

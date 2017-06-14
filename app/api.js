@@ -35,14 +35,14 @@ const mainPoints = mainOutPoints.concat(mainInPoints);
 
 export default {
   fetchGroupBubbles({ apiUrl, apiPath, token, groupId }) {
-    return fetch(`${apiUrl}${apiPath}/groups/${groupId}/registers`, {
+    return fetch(`${apiUrl}${apiPath}/${groupId}/registers`, {
       headers: prepareHeaders(token),
     })
     .then(parseResponse)
     .then(camelizeResponseKeys)
     .then(registersRes => {
       const registers = registersRes.array;
-      return fetch(`${apiUrl}${apiPath}/groups/${groupId}/bubbles`, {
+      return fetch(`${apiUrl}${apiPath}/${groupId}/bubbles`, {
         headers: prepareHeaders(token),
       })
       .then(parseResponse)

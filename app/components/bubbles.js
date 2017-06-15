@@ -51,7 +51,6 @@ export class Bubbles extends Component {
       'recalculateAngles',
       'drawData',
       'redrawData',
-      'onResize',
     ].forEach(method => {
       this[method] = this[method].bind(this);
     });

@@ -6,11 +6,6 @@ import reduce from 'lodash/reduce';
 import map from 'lodash/map';
 import find from 'lodash/find';
 import findIndex from 'lodash/findIndex';
-import sortBy from 'lodash/sortBy';
-import first from 'lodash/first';
-import last from 'lodash/last';
-import debounce from 'lodash/debounce';
-import isEqual from 'lodash/isEqual';
 
 const d3 = require('d3');
 
@@ -32,7 +27,6 @@ export class Bubbles extends Component {
     this.width = null;
     this.fullHeight = null;
     this.height = null;
-    this.outScale = 1.2;
     this.hierarchy = null;
     this.pack = null;
     this.circle = null;
@@ -43,7 +37,6 @@ export class Bubbles extends Component {
     this.clock = null;
     this.updateClock = null;
     this.ticker = true;
-    this.simulation = null;
     this.svgDom = null;
     this.svgD3 = null;
 
@@ -56,9 +49,6 @@ export class Bubbles extends Component {
       'radius',
       'outCombined',
       'recalculateAngles',
-      'formatPower',
-      'ticked',
-      'scaleCenterForce',
       'drawData',
       'redrawData',
       'onResize',
@@ -85,15 +75,11 @@ export class Bubbles extends Component {
     this.setSize();
     this.fillPoints(registers);
     this.drawData();
-
-    window.addEventListener('resize', this.onResize);
   }
 
   componentWillReceiveProps(nextProps) {
     const { registers } = nextProps;
     const { registers: oldRegisters } = this.props;
-
-    // if (isEqual(sortBy(registers, 'id'), sortBy(oldRegisters, 'id'))) return;
 
     this.fillPoints(registers);
     this.redrawData();
@@ -101,15 +87,6 @@ export class Bubbles extends Component {
 
   setSize() {
     if (!this.svgDom) return;
-    // this.fullWidth = this.svgDom.getBoundingClientRect().width;
-    // this.width = this.fullWidth;
-    // this.fullHeight = this.svgDom.getBoundingClientRect().height;
-    // this.height = this.fullHeight;
-    // if (this.width > this.height + this.height * 0.2) {
-    //   this.width = this.height;
-    // } else if (this.height > this.width + this.width * 0.2) {
-    //   this.height = this.width;
-    // }
     this.fullHeight = 1000;
     this.fullWidth = 1000;
     this.height = 1000;
@@ -125,15 +102,6 @@ export class Bubbles extends Component {
       id: point.id,
       value: point.value,
       label: point.label,
-      // r: 0,
-      // x: d3.scaleLinear()
-      // .domain([0, this.fullWidth])
-      // .range([this.fullWidth * 0.4, this.fullWidth * 0.6])(Math.random() * this.fullWidth),
-      // y: d3.scaleLinear()
-      // .domain([0, this.fullHeight])
-      // .range([this.fullHeight * 0.4, this.fullHeight * 0.6])(Math.random() * this.fullHeight),
-      // color: point.mode === 'in' ? this.inColor : this.outColor,
-      // outPoint: point.mode === 'out',
     });
 
     forEach(pointsArr, (point) => {
@@ -219,25 +187,6 @@ export class Bubbles extends Component {
     });
   }
 
-  formatPower(power) {
-    const powerArr = power.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,').split(',');
-    powerArr.pop();
-    return powerArr.join('.');
-  }
-
-  ticked() {
-    this.circle.attr('cx', d => d.x)
-    .attr('cy', d => d.y);
-  }
-
-  scaleCenterForce(val) {
-    const sortedData = sortBy(this.inData.children, d => d.value);
-    return d3.scaleLinear()
-    .domain([last(sortedData).value, first(sortedData).value])
-    .range([0.004, 0.0005])
-    .clamp(true)(val);
-  }
-
   drawData() {
     const isProducing = reduce(this.outData, (s, d) => s + d.value, 0) >= reduce(this.inData.children, (s, d) => s + d.value, 0);
 
@@ -269,13 +218,6 @@ export class Bubbles extends Component {
       this.clock.select('.clock-right').text((`0${now.getMinutes()}`).slice(-2));
       this.ticker = !this.ticker;
     }, 1000);
-
-    // this.svgD3.select('.bubbles')
-    // .append('circle')
-    // .style('fill', '#efefef')
-    // .attr('r', this.width / 2 - 20)
-    // .attr('cx', () => this.fullWidth / 2)
-    // .attr('cy', () => this.fullHeight / 2);
 
     this.outArc = this.svgD3.select('.bubbles')
     .append('circle')
@@ -441,36 +383,6 @@ export class Bubbles extends Component {
     .ease(d3.easeExpOut)
     .duration(1000)
     .style('opacity', isProducing ? 1 : 0)
-  }
-
-  onResize() {
-    debounce(() => {
-      if (!this.outCircle || !this.circle || !this.simulation) return;
-
-      this.setSize();
-
-      this.outCircle.attr('cx', () => this.fullWidth / 2)
-      .attr('cy', () => this.fullHeight / 2)
-      .transition()
-      .ease(d3.easeExpOut)
-      .duration(1000)
-      .attr('r', d => this.radius(this.dataWeight)(d.value));
-
-      this.circle.transition()
-      .ease(d3.easeExpOut)
-      .duration(1000)
-      .attr('r', d => this.radius(this.dataWeight)(d.value));
-
-      // Params are different from draw/redraw
-      this.simulation.force('x', d3.forceX(this.fullWidth / 2).strength(d => this.scaleCenterForce(d.value * 10)))
-      .force('y', d3.forceY(this.fullHeight / 2).strength(d => this.scaleCenterForce(d.value * 10)))
-      .force('charge', d3.forceManyBody()
-      .strength(d => d.value * 0.00002 / d3.scaleLinear()
-      .domain([0, 300])
-      .range([1, 100])(this.inData.children.length)))
-      .alpha(1)
-      .restart();
-    }, 500);
   }
 
   componentWillUnmount() {

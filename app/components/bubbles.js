@@ -188,8 +188,6 @@ export class Bubbles extends Component {
   }
 
   drawData() {
-    const isProducing = reduce(this.outData, (s, d) => s + d.value, 0) >= reduce(this.inData.children, (s, d) => s + d.value, 0);
-
     this.svgD3.append('g').classed('bubbles', true);
 
     this.clock = this.svgD3.append('g').classed('clock', true);
@@ -218,6 +216,10 @@ export class Bubbles extends Component {
       this.clock.select('.clock-right').text((`0${now.getMinutes()}`).slice(-2));
       this.ticker = !this.ticker;
     }, 1000);
+
+    this.hierarchy = d3.hierarchy(this.inData).sum(d => d.value);
+
+    const isProducing = reduce(this.outData, (s, d) => s + d.value, 0) >= reduce(this.inData.children, (s, d) => s + d.value, 0);
 
     this.outArc = this.svgD3.select('.bubbles')
     .append('circle')
@@ -256,13 +258,10 @@ export class Bubbles extends Component {
     .attr('transform', `translate(${this.width / 2}, ${this.height / 2})`)
     .style('fill', d => d.color);
 
-    this.hierarchy = d3.hierarchy(this.inData).sum(d => d.value)//.sort((a, b) => (a.value - b.value));
-
     this.pack = d3.pack().size([this.fullWidth - 20, this.fullHeight - 20]);
 
     this.circle = this.svgD3.select('.bubbles').selectAll('.in-circle')
     .data(this.pack(this.hierarchy).descendants())
-    // .data(data, dataId)
     .enter()
     .append('circle')
     .classed('in-circle', true)
@@ -273,7 +272,7 @@ export class Bubbles extends Component {
   }
 
   redrawData() {
-    this.hierarchy = d3.hierarchy(this.inData).sum(d => d.value)//.sort((a, b) => (a.value - b.value));
+    this.hierarchy = d3.hierarchy(this.inData).sum(d => d.value);
 
     const isProducing = reduce(this.outData, (s, d) => s + d.value, 0) >= reduce(this.inData.children, (s, d) => s + d.value, 0);
     let scale = reduce(this.outData, (s, d) => s + d.value, 0) / reduce(this.inData.children, (s, d) => s + d.value, 0);
@@ -337,10 +336,8 @@ export class Bubbles extends Component {
     .enter()
     .append('circle')
     .classed('in-circle', true)
-    // .style('fill', this.inColor)
     .style('fill', el => {
       if (!el.parent) return 'rgba(0, 0, 0, 0)';
-      // return el.data.c ? '#ff0000' : this.inColor
       return this.inColor;
     })
     .transition()

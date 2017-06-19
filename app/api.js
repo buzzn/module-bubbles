@@ -36,14 +36,14 @@ const mainPoints = mainOutPoints.concat(mainInPoints);
 export default {
   fetchGroupBubbles({ apiUrl, apiPath, token, groupId }) {
     return fetch(`${apiUrl}${apiPath}/${groupId}/registers`, {
-      headers: { ...prepareHeaders(), 'Cache-Control': 'no-cache' },
+      headers: { ...prepareHeaders(token), 'Cache-Control': 'no-cache' },
     })
     .then(parseResponse)
     .then(camelizeResponseKeys)
     .then(registersRes => {
       const registers = registersRes.array;
       return fetch(`${apiUrl}${apiPath}/${groupId}/bubbles`, {
-        headers: { ...prepareHeaders(), 'Cache-Control': 'no-cache' },
+        headers: { ...prepareHeaders(token), 'Cache-Control': 'no-cache' },
       })
       .then(parseResponse)
       .then(camelizeResponseKeys)

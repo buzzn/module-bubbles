@@ -1,11 +1,11 @@
 import { constants } from './actions';
 
-export default (state = { loading: false, summedData: {} }, action) => {
+export default (state = { loading: false, registers: [] }, action) => {
   switch (action.type) {
-    case constants.SET_GROUP:
-      return { ...state, group: action.group };
-    case constants.SET_DATA:
-      return { ...state, summedData: action.data };
+    case constants.SET_GROUP_ID:
+      return { ...state, groupId: action.groupId };
+    case constants.SET_REGISTERS:
+      return { ...state, registers: action.registers };
     case constants.LOADING:
       return { ...state, loading: true };
     case constants.LOADED:

@@ -1,470 +1,388 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import { findDOMNode } from 'react-dom';
-import 'whatwg-fetch';
+import filter from 'lodash/filter';
 import forEach from 'lodash/forEach';
 import reduce from 'lodash/reduce';
+import map from 'lodash/map';
 import find from 'lodash/find';
-import sortBy from 'lodash/sortBy';
-import first from 'lodash/first';
-import last from 'lodash/last';
-import debounce from 'lodash/debounce';
-import { getJson } from '../util/requests';
+import findIndex from 'lodash/findIndex';
 
 const d3 = require('d3');
 
-require('font-awesome/css/font-awesome.css');
-
 export class Bubbles extends Component {
+  static propTypes = {
+    registers: PropTypes.array.isRequired,
+  };
+
   constructor(props) {
     super(props);
 
-    this.state = {
-      fetchTimer: null,
-      drawTimer: null,
-      token: null,
-    };
-  }
+    this.inData = { name: 'in', children: [] };
+    this.outData = [];
+    this.inColor = 'rgba(128, 222, 234, 0.8)';
+    this.outColor = '#D4E157';
+    this.productionPvColor = '#ffeb3b';
+    this.productionChpColor = '#ffa726';
+    this.fullWidth = null;
+    this.width = null;
+    this.fullHeight = null;
+    this.height = null;
+    this.hierarchy = null;
+    this.pack = null;
+    this.circle = null;
+    this.outCircle = null;
+    this.outArc = null;
+    this.outSources = [];
+    this.outSourcesArc = null;
+    this.clock = null;
+    this.updateClock = null;
+    this.ticker = true;
+    this.svgDom = null;
+    this.svgD3 = null;
 
-  static propTypes = {
-    url: PropTypes.string.isRequired,
-    group: PropTypes.string.isRequired,
-  };
+    [
+      'setSize',
+      'fillPoints',
+      'dataId',
+      'totalWeight',
+      'dataWeight',
+      'radius',
+      'outCombined',
+      'recalculateAngles',
+      'drawData',
+      'redrawData',
+    ].forEach(method => {
+      this[method] = this[method].bind(this);
+    });
+  }
 
   render() {
-    const { group } = this.props;
-    const tooltipId = `tooltip-${group}`;
-    const svgId = `group-${group}`;
-    const switchId = `switch-${group}`;
-    return <div style={{ width: '100%', height: '100%' }}>
-            <i className="fa fa-retweet" id={ switchId }></i>
-            <svg id={ svgId } style={{ width: '100%', height: '100%' }}></svg>
-            <div id={ tooltipId } style={{
-              position: 'absolute',
-              textAlign: 'center',
-              borderRadius: '5px',
-              border: '1px solid #000',
-              background: '#fff',
-              opacity: 0,
-              display: 'none',
-              color: 'black',
-              padding: '10px',
-              width: '300px',
-              fontSize: '12px',
-              zIndex: 10,
-            }}></div>
-          </div>;
-  }
-
-  shouldComponentUpdate(nextProps) {
-    if (nextProps.token !== this.state.token) {
-      this.setState({ token: nextProps.token });
-    }
-    return false;
-  }
-
-  componentWillMount() {
-    const { token } = this.props;
-    this.setState({ token });
+    return (
+      <div style={{ width: '100%', height: '100%' }}>
+        <svg ref={ svgDom => this.svgDom = svgDom } width="100%" height="100%" viewBox="0 0 1000 1000">
+          <circle className="bg-circle" r="480" cx="500" cy="500" style={{ fill: '#efefef' }} />
+          <path transform="translate(300,300)" d="M73.873,423.753c-2,0 -4,-0.8 -5.2,-2c-2.8,-2.8 -3.6,-6.8 -1.6,-10.4l108.4,-171.6l-117.6,0c-3.6,0 -6.4,-2 -7.6,-5.2c-1.2,-3.2 0,-6.8 2.8,-8.8l284,-224c3.2,-2.4 7.6,-2.4 10.4,0.4c2.8,2.8 3.6,6.8 1.2,10.4l-105.6,163.2l122.8,0c3.6,0 6.4,2 7.6,5.2c1.2,3.2 0,6.8 -2.4,8.8l-292,232c-1.6,1.6 -3.6,2 -5.2,2Z" style={{ fill: '#fff', fillRule: 'nonzero' }}/>
+        </svg>
+      </div>
+    );
   }
 
   componentDidMount() {
-    const self = this;
-    const { url, group, setData, setLoading, setLoaded } = this.props;
-    const svg = d3.select(`#group-${group}`);
-    const switchButton = document.querySelector(`#switch-${group}`);
-    let switchInOnTop = true;
-    let fullWidth = null;
-    let width = null;
-    let fullHeight = null;
-    let height = null;
-    // const width = +svg.attr('width');
-    // const height = +svg.attr('height');
-    const inColor = '#5FA2DD';
-    const outColor = '#F76C51';
-    const outScale = 1.2;
-    const borderWidth = '3px';
-    const inData = [];
-    const outData = [];
-    let circle = null;
-    let outCircle = null;
-    let simulation = null;
-    let path = null;
-    let arc = null;
-    const tooltip = d3.select(`#tooltip-${group}`);
+    const { registers } = this.props;
+    this.svgD3 = d3.select(this.svgDom);
 
-    function prepareHeaders() {
-      const headers = {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-      };
-      if (self.state.token) headers.Authorization = `Bearer ${self.state.token}`;
-      return headers;
-    }
+    this.setSize();
+    this.fillPoints(registers);
+    this.drawData();
+  }
 
-    function setSize() {
-      const svgDom = document.querySelector(`#group-${group}`);
-      if (!svgDom) return;
-      fullWidth = svgDom.getBoundingClientRect().width;
-      width = fullWidth;
-      fullHeight = svgDom.getBoundingClientRect().height;
-      height = fullHeight;
-      if (width > height + height * 0.2) {
-        width = height;
-      } else if (height > width + width * 0.2) {
-        height = width;
-      }
-    }
+  componentWillReceiveProps(nextProps) {
+    const { registers } = nextProps;
+    const { registers: oldRegisters } = this.props;
 
-    function fillPoints(pointsArr) {
-      forEach(pointsArr, (pointRaw) => {
-        const point = pointRaw.attributes ? { id: pointRaw.id, ...pointRaw.attributes } : pointRaw;
-        const pointObj = {
-          id: point.id,
-          value: 0,
-          r: 0,
-          name: point.name,
-          x: d3.scaleLinear()
-            .domain([0, fullWidth])
-            .range([fullWidth * 0.4, fullWidth * 0.6])(Math.random() * fullWidth),
-          y: d3.scaleLinear()
-            .domain([0, fullHeight])
-            .range([fullHeight * 0.4, fullHeight * 0.6])(Math.random() * fullHeight),
-          updating: false,
-        };
-        if (point.direction === 'in') {
-          inData.push(Object.assign({}, pointObj, { color: inColor, outPoint: false }));
-        } else {
-          outData.push(Object.assign({}, pointObj, { color: outColor, outPoint: true, startAngle: 0, endAngle: 0 }));
-        }
-      });
-    }
+    this.fillPoints(registers);
+    this.redrawData();
+  }
 
-    function dataId(d) {
-      return d.id;
-    }
+  setSize() {
+    if (!this.svgDom) return;
+    this.fullHeight = 1000;
+    this.fullWidth = 1000;
+    this.height = 1000;
+    this.width = 1000;
+  }
 
-    function totalWeight(dataArr) {
-      return reduce(dataArr, (sum, d) => sum + d.value, 0);
-    }
+  fillPoints(pointsArr) {
+    this.inData.children = filter(this.inData.children, oldP => find(pointsArr, p => oldP.id === p.id));
+    this.outData = filter(this.outData, oldP => find(pointsArr, p => oldP.id === p.id));
 
-    function dataWeight() {
-      const weightIn = totalWeight(inData);
-      // return weightIn;
-      const weightOut = totalWeight(outData);
-      return weightOut > weightIn ? weightOut : weightIn;
-    }
-
-    function radius(weight) {
-      const zoom = width / 3;
-      return d3.scalePow()
-        .exponent(0.5)
-        .domain([0, weight()])
-        .range([2, zoom]);
-    }
-
-    function outCombined() {
-      return [{
-        id: 'outBubble',
-        value: reduce(outData, (s, d) => s + d.value, 0) * outScale,
-        name: 'Power produced',
-        outPoint: true,
-      }];
-    }
-
-    function recalculateAngles() {
-      const totalPower = reduce(outData, (s, d) => s + d.value, 0) * outScale;
-      let startAngle = 0;
-      forEach(outData, (data, idx) => {
-        if (data.value === 0) return;
-        let endAngle = (data.value * outScale / totalPower * 2 * Math.PI + startAngle) || 0;
-        if (outData.length > 1 && endAngle > 0.015) endAngle -= 0.015;
-        outData[idx].startAngle = startAngle;
-        outData[idx].endAngle = endAngle;
-        startAngle = endAngle + 0.015;
-      });
-    }
-
-    function formatPower(power) {
-      const powerArr = power.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,').split(',');
-      powerArr.pop();
-      return powerArr.join('.');
-    }
-
-    function getData() {
-      forEach(inData, (point, idx) => {
-        if (inData[idx].updating) return;
-        inData[idx].updating = true;
-        fetch(`${url}api/v1/aggregates/present?register_ids=${point.id}`, { headers: prepareHeaders() })
-          .then(getJson)
-          .then(json => {
-            inData[idx].value = Math.floor(Math.abs(json.power_milliwatt)) || 0;
-            inData[idx].updating = false;
-          })
-          .catch(error => {
-            inData[idx].updating = false;
-            console.log(error);
-          });
-      });
-      forEach(outData, (point, idx) => {
-        if (outData[idx].updating) return;
-        outData[idx].updating = true;
-        fetch(`${url}api/v1/aggregates/present?register_ids=${point.id}`, { headers: prepareHeaders() })
-          .then(getJson)
-          .then(json => {
-            outData[idx].value = Math.floor(Math.abs(json.power_milliwatt)) || 0;
-            recalculateAngles();
-            outData[idx].updating = false;
-          })
-          .catch(error => {
-            outData[idx].updating = false;
-            console.log(error);
-          });
-      });
-      setData({
-        in: formatPower(reduce(inData, (s, d) => s + d.value, 0)),
-        out: formatPower(reduce(outData, (s, d) => s + d.value, 0)),
-      });
-    }
-
-    function ticked() {
-      circle.attr('cx', d => d.x)
-        .attr('cy', d => d.y);
-    }
-
-    function showDetails(data, i, element) {
-      if (data.outPoint && data.id !== 'outBubble') {
-        d3.select(element).style('opacity', 0.9);
-      } else {
-        const color = data.outPoint ? outColor : inColor;
-        const opacity = data.outPoint ? 0.9 : 0.7;
-        d3.select(element).style('stroke', d3.rgb(color).darker().darker());
-        d3.select(element).style('opacity', opacity);
-      }
-      tooltip.transition()
-        .duration(500)
-        .style('opacity', 1)
-        .style('display', 'block');
-      tooltip.html(`<b>Name: </b>${data.name}<br /><b>Power: </b>${formatPower(data.value)} Watt`)
-        .style('left', `${d3.event.offsetX + 20}px`)
-        .style('top', `${d3.event.offsetY - 20}px`);
-    }
-
-    function hideDetails(data, i, element) {
-      if (data.outPoint && data.id !== 'outBubble') {
-        d3.select(element).style('opacity', 1);
-      } else {
-        const color = data.outPoint ? outColor : inColor;
-        const opacity = data.outPoint ? 1 : 0.9;
-        d3.select(element).style('stroke', d3.rgb(color).darker());
-        d3.select(element).style('opacity', opacity);
-      }
-      tooltip.transition()
-        .duration(500)
-        .style('opacity', 0)
-        .style('display', 'none');
-    }
-
-    function scaleCenterForce(val) {
-      const sortedData = sortBy(inData, d => d.value);
-      return d3.scaleLinear()
-        .domain([last(sortedData).value, first(sortedData).value])
-        .range([0.004, 0.0005])
-        .clamp(true)(val);
-    }
-
-    function drawData() {
-      outCircle = svg.selectAll('circle')
-        .data(outCombined(), dataId)
-        .enter()
-        .append('circle')
-        .style('fill', outColor)
-        .style('stroke', d3.rgb(outColor).darker())
-        .style('stroke-width', borderWidth)
-        .attr('r', d => radius(dataWeight)(d.value))
-        .attr('cx', () => fullWidth / 2)
-        .attr('cy', () => fullHeight / 2)
-        .on('mouseover', function mouseShow(d, i) { showDetails(d, i, this); })
-        .on('mouseout', function mouseHide(d, i) { hideDetails(d, i, this); })
-        .on('touchstart', function touchShow(d, i) { showDetails(d, i, this); })
-        .on('touchend', function touchHide(d, i) {
-          const elementSelf = this;
-          setTimeout(() => hideDetails(d, i, elementSelf), 1000);
-        });
-
-      arc = d3.arc()
-        .startAngle(d => d.startAngle)
-        .endAngle(d => d.endAngle)
-        .cornerRadius(16)
-        .innerRadius(() => radius(dataWeight)(outCombined()[0].value))
-        .outerRadius(() => radius(dataWeight)(outCombined()[0].value * 1.1));
-
-      path = svg.selectAll('path')
-        .data(outData)
-        .enter()
-        .append('path')
-        .attr('d', arc)
-        .attr('id', d => `path_${d.id}`)
-        .attr('stroke-width', 4)
-        .style('stroke', 'none')
-        .attr('transform', `translate(${fullWidth / 2}, ${fullHeight / 2})`)
-        .style('fill', d3.rgb(outColor).darker())
-        .on('mouseover', function mouseShow(d, i) { showDetails(d, i, this); })
-        .on('mouseout', function mouseHide(d, i) { hideDetails(d, i, this); })
-        .on('touchstart', function touchShow(d, i) { showDetails(d, i, this); })
-        .on('touchend', function touchHide(d, i) {
-          const elementSelf = this;
-          setTimeout(() => hideDetails(d, i, elementSelf), 1000);
-        });
-
-      simulation = d3.forceSimulation(inData)
-        .velocityDecay(0.2)
-        // .alphaDecay(0)
-        .force('x', d3.forceX(fullWidth / 2).strength(d => scaleCenterForce(d.value)))
-        .force('y', d3.forceY(fullHeight / 2).strength(d => scaleCenterForce(d.value)))
-        .force('collide', d3.forceCollide()
-          .radius(d => radius(dataWeight)(d.value) + 0.5)
-          .strength(0.02)
-          .iterations(2))
-        .force('charge', d3.forceManyBody()
-          .strength(d => d.value * 0.000002 / d3.scaleLinear()
-            .domain([0, 300])
-            .range([1, 100])(inData.length)))
-        .on('tick', ticked);
-
-      const nodes = simulation.nodes();
-
-      circle = svg.selectAll('circle')
-        .data(nodes, dataId)
-      // .data(data, dataId)
-        .enter()
-        .append('circle')
-        .style('fill', inColor)
-        .style('stroke', d3.rgb(inColor).darker())
-        .style('stroke-width', borderWidth)
-        .style('opacity', 0.9)
-        .attr('r', d => radius(dataWeight)(d.value))
-        .on('mouseover', function mouseShow(d, i) { showDetails(d, i, this); })
-        .on('mouseout', function mouseHide(d, i) { hideDetails(d, i, this); })
-        .on('touchstart', function touchShow(d, i) { showDetails(d, i, this); })
-        .on('touchend', function touchHide(d, i) {
-          const elementSelf = this;
-          setTimeout(() => hideDetails(d, i, elementSelf), 1000);
-        });
-    }
-
-    function redrawData() {
-      circle.transition()
-        .ease(d3.easeExpOut)
-        .duration(1000)
-        .attr('r', d => radius(dataWeight)(d.value));
-
-      simulation.alpha(0.8)
-        .force('x', d3.forceX(fullWidth / 2).strength(d => scaleCenterForce(d.value)))
-        .force('y', d3.forceY(fullHeight / 2).strength(d => scaleCenterForce(d.value)))
-        .force('charge', d3.forceManyBody()
-          .strength(d => d.value * 0.000002 / d3.scaleLinear()
-            .domain([0, 300])
-            .range([1, 100])(inData.length)))
-        .nodes(inData)
-        .restart();
-
-      outCircle.data(outCombined(), dataId)
-        .transition()
-        .ease(d3.easeExpOut)
-        .duration(1000)
-        .attr('r', d => radius(dataWeight)(d.value));
-
-      arc = d3.arc()
-        .startAngle(d => d.startAngle)
-        .endAngle(d => d.endAngle)
-        .cornerRadius(16)
-        .innerRadius(() => radius(dataWeight)(outCombined()[0].value))
-        .outerRadius(() => radius(dataWeight)(outCombined()[0].value * 1.1));
-
-      path.transition()
-        .ease(d3.easeExpOut)
-        .duration(1000)
-        .attr('d', arc);
-    }
-
-    switchButton.addEventListener('click', () => {
-      if (switchInOnTop) {
-        switchInOnTop = false;
-        circle.lower();
-      } else {
-        switchInOnTop = true;
-        circle.raise();
-      }
+    const generatePoint = (point) => ({
+      c: point.c,
+      id: point.id,
+      value: point.value,
+      label: point.label,
     });
 
-    this.onResize = debounce(() => {
-      if (!outCircle || !arc || !path || !circle || !simulation) return;
+    forEach(pointsArr, (point) => {
+      if (point.label === 'consumption') {
+        const idx = findIndex(this.inData.children, p => p.id === point.id);
+        if (idx === -1) {
+          this.inData.children.push(generatePoint(point));
+        } else {
+          this.inData.children[idx].value = point.value;
+        }
+      } else if (point.label === 'production_pv' || point.label === 'production_chp') {
+        const idx = findIndex(this.outData, p => p.id === point.id);
+        if (idx === -1) {
+          this.outData.push(generatePoint(point));
+        } else {
+          this.outData[idx].value = point.value;
+        }
+      }
+    });
+  }
 
-      setSize();
+  dataId(d) {
+    return d.id;
+  }
 
-      outCircle.attr('cx', () => fullWidth / 2)
-        .attr('cy', () => fullHeight / 2)
-        .transition()
-        .ease(d3.easeExpOut)
-        .duration(1000)
-        .attr('r', d => radius(dataWeight)(d.value));
+  totalWeight(dataArr) {
+    return reduce(dataArr, (sum, d) => sum + d.value, 0);
+  }
 
-      arc.innerRadius(() => radius(dataWeight)(outCombined()[0].value))
-        .outerRadius(() => radius(dataWeight)(outCombined()[0].value * 1.1));
+  dataWeight() {
+    const weightIn = this.totalWeight(this.inData.children);
+    const weightOut = this.totalWeight(this.outData);
+    return weightOut > weightIn ? weightOut : weightIn;
+  }
 
-      path.attr('transform', `translate(${fullWidth / 2}, ${fullHeight / 2})`)
-        .transition()
-        .ease(d3.easeExpOut)
-        .duration(1000)
-        .attr('d', arc);
+  radius(weight) {
+    const zoom = this.width / 3;
+    return d3.scalePow()
+    .exponent(0.5)
+    .domain([0, weight()])
+    .range([2, zoom]);
+  }
 
-      circle.transition()
-        .ease(d3.easeExpOut)
-        .duration(1000)
-        .attr('r', d => radius(dataWeight)(d.value));
+  outCombined() {
+    return [{
+      id: 'outBubble',
+      value: reduce(this.outData, (s, d) => s + d.value, 0),
+    }];
+  }
 
-      // Params are different from draw/redraw
-      simulation.force('x', d3.forceX(fullWidth / 2).strength(d => scaleCenterForce(d.value * 10)))
-        .force('y', d3.forceY(fullHeight / 2).strength(d => scaleCenterForce(d.value * 10)))
-        .force('charge', d3.forceManyBody()
-          .strength(d => d.value * 0.00002 / d3.scaleLinear()
-            .domain([0, 300])
-            .range([1, 100])(inData.length)))
-        .alpha(1)
-        .restart();
-    }, 500);
+  recalculateAngles() {
+    const totalPower = reduce(this.outData, (s, d) => s + d.value, 0);
+    const sources = {};
+    const setColor = (label) => {
+      switch (label) {
+        case 'production_pv':
+          return this.productionPvColor;
+        case 'production_chp':
+          return this.productionChpColor;
+        default:
+          return this.outColor;
+      }
+    };
+    forEach(this.outData, (d) => {
+      if (!sources[d.label]) sources[d.label] = { color: setColor(d.label), value: 0 };
+      sources[d.label].value += d.value;
+    });
+    const outSources = map(sources, (v, k) => ({ id: k, source: k, ...v }));
 
-    function getMeteringPoints() {
-      fetch(`${url}api/v1/groups/${group}/registers`, { headers: prepareHeaders() })
-        .then(getJson)
-        .then(jsonRaw => {
-          const json = jsonRaw.data ? jsonRaw.data : jsonRaw;
-          if (json.length === 0) return Promise.reject('Empty group');
-          fillPoints(json);
-          getData();
-          self.setState({ fetchTimer: setInterval(getData, 10000) });
-          setLoaded();
-          drawData();
-          self.setState({ drawTimer: setInterval(redrawData, 10000) });
-        })
-        .catch(error => {
-          console.log(error);
-        });
+    let startAngle = 0;
+    forEach(outSources, (data, idx) => {
+      if (data.value === 0) return;
+      let endAngle = (data.value / totalPower * 2 * Math.PI + startAngle) || 0;
+      outSources[idx].startAngle = startAngle;
+      outSources[idx].endAngle = endAngle;
+      startAngle = endAngle;
+      const resIdx = findIndex(this.outSources, s => s.source === data.source);
+      if (resIdx > -1) {
+        this.outSources[resIdx] = { ...outSources[idx], old: this.outSources[resIdx].old };
+      } else {
+        this.outSources.push(outSources[idx]);
+      }
+    });
+  }
+
+  drawData() {
+    this.svgD3.append('g').classed('bubbles', true);
+
+    this.clock = this.svgD3.append('g').classed('clock', true);
+
+    this.clock.append('text')
+    .text('')
+    .classed('clock-left', true)
+    .attr('x', '180')
+    .attr('y', '580')
+    .style('font-size', '260px')
+    .style('font-family', 'Asap-Regular, Helvetica')
+    .style('color', '#4a4a4a');
+
+    this.clock.append('text')
+    .text('')
+    .classed('clock-right', true)
+    .attr('x', '520')
+    .attr('y', '580')
+    .style('font-size', '260px')
+    .style('font-family', 'Asap-Regular, Helvetica')
+    .style('color', '#4a4a4a');
+
+    this.updateClock = setInterval(() => {
+      const now = new Date();
+      this.clock.select('.clock-left').text((`0${now.getHours()}`).slice(-2) + (this.ticker ? ':' : ' '));
+      this.clock.select('.clock-right').text((`0${now.getMinutes()}`).slice(-2));
+      this.ticker = !this.ticker;
+    }, 1000);
+
+    this.hierarchy = d3.hierarchy(this.inData).sum(d => d.value);
+
+    const isProducing = reduce(this.outData, (s, d) => s + d.value, 0) >= reduce(this.inData.children, (s, d) => s + d.value, 0);
+
+    this.outArc = this.svgD3.select('.bubbles')
+    .append('circle')
+    .classed('out-arc', true)
+    .style('fill', 'rgba(0, 0, 0, 0)')
+    .style('stroke', this.outColor)
+    .style('stroke-width', '20px')
+    .attr('r', this.width / 2 - 20)
+    .attr('cx', () => this.fullWidth / 2)
+    .attr('cy', () => this.fullHeight / 2);
+
+    this.outCircle = this.svgD3.select('.bubbles').selectAll('.out-circle')
+    .data(this.outCombined(), this.dataId)
+    .enter()
+    .append('circle')
+    .classed('out-circle', true)
+    .style('fill', this.outColor)
+    .attr('r', d => (isProducing ? this.width / 2 : this.radius(this.dataWeight)(d.value)))
+    .attr('cx', () => this.fullWidth / 2)
+    .attr('cy', () => this.fullHeight / 2);
+
+    this.recalculateAngles();
+
+    const arc = d3.arc()
+    .startAngle(d => d.startAngle)
+    .endAngle(d => d.endAngle)
+    .innerRadius(this.width / 2 - 50)
+    .outerRadius(this.width / 2 - 30);
+
+    this.outSourcesArc = this.svgD3.select('.bubbles').selectAll('.out-source')
+    .data(this.outSources, this.dataId)
+    .enter()
+    .append('path')
+    .classed('out-source', true)
+    .attr('d', arc)
+    .attr('transform', `translate(${this.width / 2}, ${this.height / 2})`)
+    .style('fill', d => d.color);
+
+    this.pack = d3.pack().size([this.fullWidth - 20, this.fullHeight - 20]);
+
+    this.circle = this.svgD3.select('.bubbles').selectAll('.in-circle')
+    .data(this.pack(this.hierarchy).descendants())
+    .enter()
+    .append('circle')
+    .classed('in-circle', true)
+    .style('fill', el => !el.parent ? 'rgba(0, 0, 0, 0)' : this.inColor)
+    .attr('cx', d => d.x)
+    .attr('cy', d => d.y)
+    .attr('r', d => d.r || 0);
+  }
+
+  redrawData() {
+    this.hierarchy = d3.hierarchy(this.inData).sum(d => d.value);
+
+    const isProducing = reduce(this.outData, (s, d) => s + d.value, 0) >= reduce(this.inData.children, (s, d) => s + d.value, 0);
+    let scale = reduce(this.outData, (s, d) => s + d.value, 0) / reduce(this.inData.children, (s, d) => s + d.value, 0);
+    let margin = 0;
+    if (scale <= 1.5) {
+      scale = 1;
+    } else if (scale <= 2) {
+      scale = 1.5;
+      margin = 200;
+    } else {
+      scale = 2;
+      margin = 260;
     }
 
-    setSize();
+    this.recalculateAngles();
 
-    window.addEventListener('resize', this.onResize);
+    const arc = d3.arc()
+    .startAngle(d => d.startAngle)
+    .endAngle(d => d.endAngle)
+    .innerRadius(this.width / 2 - 50)
+    .outerRadius(this.width / 2 - 30);
 
-    setLoading();
-    getMeteringPoints();
+    this.outSourcesArc = this.svgD3.select('.bubbles').selectAll('.out-source');
+
+    this.outSourcesArc.data(this.outSources, this.dataId)
+    .enter()
+    .append('path')
+    .classed('out-source', true)
+    .attr('transform', `translate(${this.width / 2}, ${this.height / 2})`)
+    .transition()
+    .ease(d3.easeExpOut)
+    .duration(1000)
+    .attr('d', arc)
+    .style('fill', d => d.color)
+    .style('opacity', isProducing ? 1 : 0);
+
+    this.outSourcesArc
+    .style('fill', d => d.color)
+    .transition()
+    .ease(d3.easeExpOut)
+    .duration(1000)
+    .style('opacity', isProducing ? 1 : 0)
+    .attrTween('d', function (d) {
+      const i = d3.interpolate(d.old, d);
+      d.old = i(0);
+      return (t) => arc(i(t));
+    });
+
+    this.outSourcesArc.data(this.outSources, this.dataId)
+    .exit()
+    .transition()
+    .duration(200)
+    .style('opacity', 0)
+    .remove();
+
+    this.pack = d3.pack().size([this.fullWidth / scale - 20, this.fullHeight / scale - 20]);
+
+    this.circle = this.svgD3.select('.bubbles').selectAll('.in-circle');
+
+    this.circle.data(this.pack(this.hierarchy).descendants())
+    .enter()
+    .append('circle')
+    .classed('in-circle', true)
+    .style('fill', el => {
+      if (!el.parent) return 'rgba(0, 0, 0, 0)';
+      return this.inColor;
+    })
+    .transition()
+    .ease(d3.easeExpOut)
+    .duration(1000)
+    .attr('cx', d => (d.x + (((this.fullWidth) - (this.fullWidth / scale)) / 2)))
+    .attr('cy', d => (d.y + (((this.fullHeight) - (this.fullHeight / scale)) / 2 + margin)))
+    .attr('r', d => d.r || 0)
+
+    this.circle
+    .transition()
+    .ease(d3.easeExpOut)
+    .duration(1000)
+    .attr('cx', d => (d.x + (((this.fullWidth) - (this.fullWidth / scale)) / 2)))
+    .attr('cy', d => (d.y + (((this.fullHeight) - (this.fullHeight / scale)) / 2 + margin)))
+    .attr('r', d => d.r || 0);
+
+    this.circle.data(this.pack(this.hierarchy).descendants())
+    .exit()
+    .transition()
+    .duration(200)
+    .attr('r', 0)
+    .style('opacity', 0)
+    .remove();
+
+    this.outArc.transition()
+    .ease(d3.easeExpOut)
+    .duration(1000)
+    .style('opacity', isProducing ? 1 : 0);
+
+    this.outCircle.data(this.outCombined(), this.dataId)
+    .transition()
+    .ease(d3.easeExpOut)
+    .duration(1000)
+    .style('opacity', isProducing ? 0 : 1)
+    .attr('r', d => (isProducing ? this.width / 2 : this.radius(this.dataWeight)(d.value)));
+
+    this.svgD3.select('.bg-circle')
+    .transition()
+    .ease(d3.easeExpOut)
+    .duration(1000)
+    .style('opacity', isProducing ? 1 : 0)
   }
 
   componentWillUnmount() {
-    clearInterval(this.state.fetchTimer);
-    clearInterval(this.state.drawTimer);
-    window.removeEventListener('resize', this.onResize);
+    clearInterval(this.updateClock);
   }
 }
 

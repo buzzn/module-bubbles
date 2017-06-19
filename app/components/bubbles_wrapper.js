@@ -1,12 +1,11 @@
 import React from 'react';
 import { connect } from 'react-redux';
+import reduce from 'lodash/reduce';
 import BubblesLayout from './bubbles_layout';
 import Bubbles from './bubbles';
-import InfoPanel from './info_panel';
-import { actions } from '../actions';
 
 export const BubblesWrapper = props => (
-  <props.Layout { ...props } Bubbles={ Bubbles } InfoPanel={ InfoPanel } />
+  <props.Layout { ...props } Bubbles={ Bubbles } />
 );
 
 BubblesWrapper.defaultProps = {
@@ -15,19 +14,9 @@ BubblesWrapper.defaultProps = {
 
 function mapStateToProps(state) {
   return {
-    // TODO: replace with ownProps parameter
-    url: state.config.apiUrl,
-    // TODO: replace 'bubbles' with 'mountedPath' ownProps parameter or constant
-    group: state.bubbles.group,
-    summedData: state.bubbles.summedData,
+    registers: state.bubbles.registers,
     loading: state.bubbles.loading,
   };
 }
 
-const mappedActions = {
-  setData: actions.setData,
-  setLoading: actions.loading,
-  setLoaded: actions.loaded,
-};
-
-export default connect(mapStateToProps, mappedActions)(BubblesWrapper);
+export default connect(mapStateToProps)(BubblesWrapper);

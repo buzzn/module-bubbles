@@ -197,8 +197,8 @@ export class Bubbles extends Component {
     .attr('x', '180')
     .attr('y', '580')
     .style('font-size', '260px')
-    .style('font-family', 'Asap-Regular, Helvetica')
-    .style('color', '#4a4a4a');
+    .style('font-family', 'Asap, Helvetica')
+    .style('fill', 'rgba(74, 74, 74, 0.8)');
 
     this.clock.append('text')
     .text('')
@@ -206,8 +206,8 @@ export class Bubbles extends Component {
     .attr('x', '520')
     .attr('y', '580')
     .style('font-size', '260px')
-    .style('font-family', 'Asap-Regular, Helvetica')
-    .style('color', '#4a4a4a');
+    .style('font-family', 'Asap, Helvetica')
+    .style('fill', 'rgba(74, 74, 74, 0.8)');
 
     this.updateClock = setInterval(() => {
       const now = new Date();

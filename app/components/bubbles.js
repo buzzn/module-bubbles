@@ -104,14 +104,14 @@ export class Bubbles extends Component {
     });
 
     forEach(pointsArr, (point) => {
-      if (point.label === 'consumption') {
+      if (point.label.toLowerCase() === 'consumption') {
         const idx = findIndex(this.inData.children, p => p.id === point.id);
         if (idx === -1) {
           this.inData.children.push(generatePoint(point));
         } else {
           this.inData.children[idx].value = point.value;
         }
-      } else if (point.label === 'production_pv' || point.label === 'production_chp') {
+      } else if (point.label.toLowerCase() === 'production_pv' || point.label.toLowerCase() === 'production_chp') {
         const idx = findIndex(this.outData, p => p.id === point.id);
         if (idx === -1) {
           this.outData.push(generatePoint(point));

@@ -20,13 +20,18 @@ export function* getGroupBubbles({ apiUrl, apiPath, token, groupId }) {
 export function* bubblesSagas({ apiUrl, apiPath, token, groupId }) {
   while (true) {
     if (groupId) {
-      const { newGroupId } = yield race({
+      const { newGroupId, stopRequests } = yield race({
         delay: call(delay, 10 * 1000),
         newGroupId: take(constants.SET_GROUP_ID),
+        stopRequests: take(constants.STOP_REQUESTS),
       });
 
       if (newGroupId) {
         groupId = newGroupId.groupId;
+        yield put(actions.setRegisters([]));
+      }
+      if (stopRequests) {
+        groupId = null;
         yield put(actions.setRegisters([]));
       }
     } else {
@@ -34,7 +39,7 @@ export function* bubblesSagas({ apiUrl, apiPath, token, groupId }) {
       groupId = newGroupId.groupId;
     }
 
-    yield fork(getGroupBubbles, { apiUrl, apiPath, token, groupId });
+    if (groupId) yield fork(getGroupBubbles, { apiUrl, apiPath, token, groupId });
   }
 }
 

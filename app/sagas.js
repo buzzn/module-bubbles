@@ -2,6 +2,9 @@ import { constants, actions } from './actions';
 import { takeLatest, delay } from 'redux-saga';
 import { call, put, fork, take, select, race } from 'redux-saga/effects';
 import api from './api';
+import { logException } from './_util';
+
+let errReporter = null;
 
 export const getGroupId = state => state.bubbles.groupId;
 
@@ -12,7 +15,7 @@ export function* getGroupBubbles({ apiUrl, apiPath, token, groupId }) {
     const registers = yield call(api.fetchGroupBubbles, { apiUrl, apiPath, token, groupId });
     yield put(actions.setRegisters(registers));
   } catch (error) {
-    console.log(error);
+    logException(error, null, errReporter);
   }
   yield put(actions.loaded());
 }
@@ -43,7 +46,8 @@ export function* bubblesSagas({ apiUrl, apiPath, token, groupId }) {
   }
 }
 
-export default function* () {
+export default function* (appErrReporter) {
+  errReporter = appErrReporter;
   const { apiUrl, apiPath } = yield take(constants.SET_API_PARAMS);
   let { token } = yield take(constants.SET_TOKEN);
   let groupId = yield select(getGroupId);

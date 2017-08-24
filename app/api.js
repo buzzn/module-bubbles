@@ -2,7 +2,7 @@ import 'whatwg-fetch';
 import range from 'lodash/range';
 import filter from 'lodash/filter';
 import find from 'lodash/find';
-import { prepareHeaders, parseResponse, camelizeResponseKeys } from './_util';
+import { req, prepareHeaders, parseResponse, camelizeResponseKeys } from './_util';
 
 function guid() {
   return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
@@ -35,21 +35,39 @@ const mainPoints = mainOutPoints.concat(mainInPoints);
 
 export default {
   fetchGroupBubbles({ apiUrl, apiPath, token, groupId }) {
-    return fetch(`${apiUrl}${apiPath}/${groupId}/registers`, {
+    return req({
+      method: 'GET',
+      url: `${apiUrl}${apiPath}/${groupId}/registers`,
       headers: { ...prepareHeaders(token), 'Cache-Control': 'no-cache' },
     })
-    .then(parseResponse)
-    .then(camelizeResponseKeys)
+    .then(str => camelizeResponseKeys(JSON.parse(str)))
     .then(registersRes => {
       const registers = registersRes.array;
-      return fetch(`${apiUrl}${apiPath}/${groupId}/bubbles`, {
+      return req({
+        method: 'GET',
+        url: `${apiUrl}${apiPath}/${groupId}/bubbles`,
         headers: { ...prepareHeaders(token), 'Cache-Control': 'no-cache' },
       })
-      .then(parseResponse)
-      .then(camelizeResponseKeys)
+      .then(str => camelizeResponseKeys(JSON.parse(str)))
       .then(bubbles => filter(bubbles.array, b => find(registers, r => r.id === b.resourceId)).map(b => ({ ...b, id: b.resourceId, label: find(registers, r => r.id === b.resourceId).label })));
     });
   },
+  // fetchGroupBubbles({ apiUrl, apiPath, token, groupId }) {
+  //   return fetch(`${apiUrl}${apiPath}/${groupId}/registers`, {
+  //     headers: { ...prepareHeaders(token), 'Cache-Control': 'no-cache' },
+  //   })
+  //   .then(parseResponse)
+  //   .then(camelizeResponseKeys)
+  //   .then(registersRes => {
+  //     const registers = registersRes.array;
+  //     return fetch(`${apiUrl}${apiPath}/${groupId}/bubbles`, {
+  //       headers: { ...prepareHeaders(token), 'Cache-Control': 'no-cache' },
+  //     })
+  //     .then(parseResponse)
+  //     .then(camelizeResponseKeys)
+  //     .then(bubbles => filter(bubbles.array, b => find(registers, r => r.id === b.resourceId)).map(b => ({ ...b, id: b.resourceId, label: find(registers, r => r.id === b.resourceId).label })));
+  //   });
+  // },
   fetchGroupBubblesFake({ apiUrl, apiPath, token, groupId }) {
     const newMainPoints = mainPoints.map(p => ({ ...p, value: getRandomIntInclusive(5000, 10000) }));
     const outPoints = range(getRandomIntInclusive(0, 2)).map(num => ({ resource_id: guid(), mode: 'out', value: getRandomIntInclusive(80000, 180000), label: generateLabel() }));

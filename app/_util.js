@@ -1,6 +1,29 @@
 import forEach from 'lodash/forEach';
 import camelCase from 'lodash/camelCase';
 
+export function req(reqObj) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.timeout = 10 * 1000;
+    xhr.open(reqObj.method || 'GET', reqObj.url);
+    if (reqObj.headers) {
+      Object.keys(reqObj.headers).forEach(key => {
+        xhr.setRequestHeader(key, reqObj.headers[key]);
+      });
+    }
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve(xhr.response);
+      } else {
+        reject(xhr.statusText);
+      }
+    };
+    xhr.onerror = () => reject(xhr.statusText);
+    xhr.ontimeout = () => reject('Timeout');
+    xhr.send(reqObj.body);
+  });
+}
+
 export function prepareHeaders(token) {
   const headers =  {
     Accept: 'application/json',
@@ -47,4 +70,12 @@ export function camelizeResponseKeys(data) {
     }
   });
   return result;
+}
+
+export function logException(ex, context, errReporter) {
+  if (typeof errReporter === 'function') {
+    errReporter(ex, context);
+  } else {
+    console.error(ex);
+  }
 }

@@ -42,7 +42,7 @@ export function* bubblesSagas({ apiUrl, apiPath, token, groupId }) {
       groupId = newGroupId.groupId;
     }
 
-    if (groupId) yield fork(getGroupBubbles, { apiUrl, apiPath, token, groupId });
+    if (groupId && !document.hidden) yield fork(getGroupBubbles, { apiUrl, apiPath, token, groupId });
   }
 }
 

@@ -1,6 +1,6 @@
+import { delay } from 'redux-saga';
+import { call, put, fork, take, select, race, cancel } from 'redux-saga/effects';
 import { constants, actions } from './actions';
-import { takeLatest, delay } from 'redux-saga';
-import { call, put, fork, take, select, race } from 'redux-saga/effects';
 import api from './api';
 import { logException } from './_util';
 

@@ -4,7 +4,7 @@ import camelCase from 'lodash/camelCase';
 export function req(reqObj) {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
-    xhr.timeout = 20 * 1000;
+    xhr.timeout = 30 * 1000;
     xhr.open(reqObj.method || 'GET', reqObj.url);
     if (reqObj.headers) {
       Object.keys(reqObj.headers).forEach(key => {

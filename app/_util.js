@@ -1,10 +1,10 @@
 import forEach from 'lodash/forEach';
 import camelCase from 'lodash/camelCase';
 
-export function req(reqObj) {
+export function req(reqObj, timeout) {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
-    xhr.timeout = 30 * 1000;
+    xhr.timeout = timeout;
     xhr.open(reqObj.method || 'GET', reqObj.url);
     if (reqObj.headers) {
       Object.keys(reqObj.headers).forEach(key => {

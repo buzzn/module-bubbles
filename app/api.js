@@ -34,12 +34,12 @@ const mainInPoints = range(getRandomIntInclusive(5, 20)).map(num => ({ resource_
 const mainPoints = mainOutPoints.concat(mainInPoints);
 
 export default {
-  fetchGroupBubbles({ apiUrl, apiPath, token, groupId }) {
+  fetchGroupBubbles({ apiUrl, apiPath, token, groupId, timeout }) {
     return req({
       method: 'GET',
       url: `${apiUrl}${apiPath}/${groupId}/registers`,
       headers: { ...prepareHeaders(token), 'Cache-Control': 'no-cache' },
-    })
+    }, timeout)
     .then(str => camelizeResponseKeys(JSON.parse(str)))
     .then(registersRes => {
       const registers = registersRes.array;
@@ -47,7 +47,7 @@ export default {
         method: 'GET',
         url: `${apiUrl}${apiPath}/${groupId}/bubbles`,
         headers: { ...prepareHeaders(token), 'Cache-Control': 'no-cache' },
-      })
+      }, timeout)
       .then(str => camelizeResponseKeys(JSON.parse(str)))
       .then(bubbles => filter(bubbles.array, b => find(registers, r => r.id === b.resourceId)).map(b => ({ ...b, id: b.resourceId, label: find(registers, r => r.id === b.resourceId).label })));
     });

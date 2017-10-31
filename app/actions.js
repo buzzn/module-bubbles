@@ -9,7 +9,7 @@ export const constants = {
 };
 
 export const actions = {
-  setApiParams: ({ apiUrl, apiPath }) => ({ type: constants.SET_API_PARAMS, apiUrl, apiPath }),
+  setApiParams: ({ apiUrl, apiPath, timeout }) => ({ type: constants.SET_API_PARAMS, apiUrl, apiPath, timeout }),
   setToken: token => ({ type: constants.SET_TOKEN, token }),
   setGroupId: groupId => ({ type: constants.SET_GROUP_ID, groupId }),
   stopRequests: () => ({ type: constants.STOP_REQUESTS }),

@@ -8,11 +8,11 @@ let errReporter = null;
 
 export const getGroupId = state => state.bubbles.groupId;
 
-export function* getGroupBubbles({ apiUrl, apiPath, token, groupId }) {
+export function* getGroupBubbles({ apiUrl, apiPath, token, groupId, timeout }) {
   yield put(actions.loading());
   try {
     // const registers = yield call(api.fetchGroupBubblesFake, { apiUrl, apiPath, token, groupId });
-    const registers = yield call(api.fetchGroupBubbles, { apiUrl, apiPath, token, groupId });
+    const registers = yield call(api.fetchGroupBubbles, { apiUrl, apiPath, token, groupId, timeout });
     yield put(actions.setRegisters(registers));
   } catch (error) {
     logException(error, null, errReporter);
@@ -20,7 +20,7 @@ export function* getGroupBubbles({ apiUrl, apiPath, token, groupId }) {
   yield put(actions.loaded());
 }
 
-export function* bubblesSagas({ apiUrl, apiPath, token, groupId }) {
+export function* bubblesSagas({ apiUrl, apiPath, token, groupId, timeout }) {
   while (true) {
     if (groupId) {
       const { newGroupId, stopRequests } = yield race({
@@ -42,21 +42,21 @@ export function* bubblesSagas({ apiUrl, apiPath, token, groupId }) {
       groupId = newGroupId.groupId;
     }
 
-    if (groupId && !document.hidden) yield fork(getGroupBubbles, { apiUrl, apiPath, token, groupId });
+    if (groupId && !document.hidden) yield fork(getGroupBubbles, { apiUrl, apiPath, token, groupId, timeout });
   }
 }
 
 export default function* (appErrReporter) {
   errReporter = appErrReporter;
-  const { apiUrl, apiPath } = yield take(constants.SET_API_PARAMS);
+  const { apiUrl, apiPath, timeout = 10 * 1000 } = yield take(constants.SET_API_PARAMS);
   let { token } = yield take(constants.SET_TOKEN);
   let groupId = yield select(getGroupId);
   if (groupId) {
-    yield fork(getGroupBubbles, { apiUrl, apiPath, token, groupId });
+    yield fork(getGroupBubbles, { apiUrl, apiPath, token, groupId, timeout });
   }
 
   while (true) {
-    const sagas = yield fork(bubblesSagas, { apiUrl, apiPath, token, groupId });
+    const sagas = yield fork(bubblesSagas, { apiUrl, apiPath, token, groupId, timeout });
     const payload = yield take(constants.SET_TOKEN);
     token = payload.token;
     yield cancel(sagas);

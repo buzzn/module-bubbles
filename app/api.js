@@ -2,6 +2,7 @@ import 'whatwg-fetch';
 import range from 'lodash/range';
 import filter from 'lodash/filter';
 import find from 'lodash/find';
+import get from 'lodash/get';
 import { req, prepareHeaders, parseResponse, camelizeResponseKeys } from './_util';
 
 function guid() {
@@ -37,12 +38,12 @@ export default {
   fetchGroupBubbles({ apiUrl, apiPath, token, groupId, timeout }) {
     return req({
       method: 'GET',
-      url: `${apiUrl}${apiPath}/${groupId}/registers`,
+      url: `${apiUrl}${apiPath}/${groupId}?include=meters:[registers]`,
       headers: { ...prepareHeaders(token), 'Cache-Control': 'no-cache' },
     }, timeout)
     .then(str => camelizeResponseKeys(JSON.parse(str)))
     .then(registersRes => {
-      const registers = registersRes.array;
+      const registers = get(registersRes.meters, 'array', []).reduce((sum, meter) => get(meter.registers, 'array', []).concat(sum), []);
       return req({
         method: 'GET',
         url: `${apiUrl}${apiPath}/${groupId}/bubbles`,

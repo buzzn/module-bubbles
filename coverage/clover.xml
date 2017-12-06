@@ -1,19 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1503531638397" clover="3.2.0">
-  <project timestamp="1503531638398" name="All files">
-    <metrics statements="9" coveredstatements="3" conditionals="0" coveredconditionals="0" methods="7" coveredmethods="1" elements="16" coveredelements="4" complexity="0" loc="9" ncloc="9" packages="1" files="1" classes="1">
-      <file name="actions.js" path="/Users/dongeolog/node_apps/buzzn/modules/bubbles/app/actions.js">
-        <metrics statements="9" coveredstatements="3" conditionals="0" coveredconditionals="0" methods="7" coveredmethods="1"/>
-        <line num="1" count="1" type="stmt"/>
-        <line num="11" count="1" type="stmt"/>
-        <line num="12" count="0" type="stmt"/>
-        <line num="13" count="0" type="stmt"/>
-        <line num="14" count="1" type="stmt"/>
-        <line num="15" count="0" type="stmt"/>
-        <line num="16" count="0" type="stmt"/>
-        <line num="17" count="0" type="stmt"/>
-        <line num="18" count="0" type="stmt"/>
-      </file>
+<coverage generated="1512572277506" clover="3.2.0">
+  <project timestamp="1512572277507" name="All files">
+    <metrics statements="0" coveredstatements="0" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0" elements="0" coveredelements="0" complexity="0" loc="0" ncloc="0" packages="0" files="0" classes="0">
     </metrics>
   </project>
 </coverage>

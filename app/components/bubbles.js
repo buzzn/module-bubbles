@@ -23,6 +23,8 @@ export class Bubbles extends Component {
     this.outColor = '#D4E157';
     this.productionPvColor = '#ffeb3b';
     this.productionChpColor = '#ffa726';
+    this.productionWaterColor = '#1e88e5';
+    this.productionWindColor = '#90caf9';
     this.fullWidth = null;
     this.width = null;
     this.fullHeight = null;
@@ -104,14 +106,15 @@ export class Bubbles extends Component {
     });
 
     forEach(pointsArr, (point) => {
-      if (point.label.toLowerCase() === 'consumption') {
+      const label = point.label.toLowerCase();
+      if (label === 'consumption' || label === 'consumption_common') {
         const idx = findIndex(this.inData.children, p => p.id === point.id);
         if (idx === -1) {
           this.inData.children.push(generatePoint(point));
         } else {
           this.inData.children[idx].value = point.value;
         }
-      } else if (point.label.toLowerCase() === 'production_pv' || point.label.toLowerCase() === 'production_chp') {
+      } else if (label === 'production_pv' || label === 'production_chp' || label === 'production_water' || label === 'production_wind') {
         const idx = findIndex(this.outData, p => p.id === point.id);
         if (idx === -1) {
           this.outData.push(generatePoint(point));
@@ -139,9 +142,9 @@ export class Bubbles extends Component {
   radius(weight) {
     const zoom = this.width / 3;
     return d3.scalePow()
-    .exponent(0.5)
-    .domain([0, weight()])
-    .range([2, zoom]);
+      .exponent(0.5)
+      .domain([0, weight()])
+      .range([2, zoom]);
   }
 
   outCombined() {
@@ -160,6 +163,10 @@ export class Bubbles extends Component {
           return this.productionPvColor;
         case 'production_chp':
           return this.productionChpColor;
+        case 'production_water':
+          return this.productionWaterColor;
+        case 'production_wind':
+          return this.productionWindColor;
         default:
           return this.outColor;
       }
@@ -192,22 +199,22 @@ export class Bubbles extends Component {
     this.clock = this.svgD3.append('g').classed('clock', true);
 
     this.clock.append('text')
-    .text('')
-    .classed('clock-left', true)
-    .attr('x', '180')
-    .attr('y', '580')
-    .style('font-size', '260px')
-    .style('font-family', 'Asap, Helvetica')
-    .style('fill', 'rgba(74, 74, 74, 0.5)');
+      .text('')
+      .classed('clock-left', true)
+      .attr('x', '180')
+      .attr('y', '580')
+      .style('font-size', '260px')
+      .style('font-family', 'Asap, Helvetica')
+      .style('fill', 'rgba(74, 74, 74, 0.5)');
 
     this.clock.append('text')
-    .text('')
-    .classed('clock-right', true)
-    .attr('x', '520')
-    .attr('y', '580')
-    .style('font-size', '260px')
-    .style('font-family', 'Asap, Helvetica')
-    .style('fill', 'rgba(74, 74, 74, 0.5)');
+      .text('')
+      .classed('clock-right', true)
+      .attr('x', '520')
+      .attr('y', '580')
+      .style('font-size', '260px')
+      .style('font-family', 'Asap, Helvetica')
+      .style('fill', 'rgba(74, 74, 74, 0.5)');
 
     this.updateClock = setInterval(() => {
       const now = new Date();
@@ -221,53 +228,53 @@ export class Bubbles extends Component {
     const isProducing = reduce(this.outData, (s, d) => s + d.value, 0) >= reduce(this.inData.children, (s, d) => s + d.value, 0);
 
     this.outArc = this.svgD3.select('.bubbles')
-    .append('circle')
-    .classed('out-arc', true)
-    .style('fill', 'rgba(0, 0, 0, 0)')
-    .style('stroke', this.outColor)
-    .style('stroke-width', '20px')
-    .attr('r', this.width / 2 - 20)
-    .attr('cx', () => this.fullWidth / 2)
-    .attr('cy', () => this.fullHeight / 2);
+      .append('circle')
+      .classed('out-arc', true)
+      .style('fill', 'rgba(0, 0, 0, 0)')
+      .style('stroke', this.outColor)
+      .style('stroke-width', '20px')
+      .attr('r', this.width / 2 - 20)
+      .attr('cx', () => this.fullWidth / 2)
+      .attr('cy', () => this.fullHeight / 2);
 
     this.outCircle = this.svgD3.select('.bubbles').selectAll('.out-circle')
-    .data(this.outCombined(), this.dataId)
-    .enter()
-    .append('circle')
-    .classed('out-circle', true)
-    .style('fill', this.outColor)
-    .attr('r', d => (isProducing ? this.width / 2 : this.radius(this.dataWeight)(d.value)))
-    .attr('cx', () => this.fullWidth / 2)
-    .attr('cy', () => this.fullHeight / 2);
+      .data(this.outCombined(), this.dataId)
+      .enter()
+      .append('circle')
+      .classed('out-circle', true)
+      .style('fill', this.outColor)
+      .attr('r', d => (isProducing ? this.width / 2 : this.radius(this.dataWeight)(d.value)))
+      .attr('cx', () => this.fullWidth / 2)
+      .attr('cy', () => this.fullHeight / 2);
 
     this.recalculateAngles();
 
     const arc = d3.arc()
-    .startAngle(d => d.startAngle)
-    .endAngle(d => d.endAngle)
-    .innerRadius(this.width / 2 - 50)
-    .outerRadius(this.width / 2 - 30);
+      .startAngle(d => d.startAngle)
+      .endAngle(d => d.endAngle)
+      .innerRadius(this.width / 2 - 50)
+      .outerRadius(this.width / 2 - 30);
 
     this.outSourcesArc = this.svgD3.select('.bubbles').selectAll('.out-source')
-    .data(this.outSources, this.dataId)
-    .enter()
-    .append('path')
-    .classed('out-source', true)
-    .attr('d', arc)
-    .attr('transform', `translate(${this.width / 2}, ${this.height / 2})`)
-    .style('fill', d => d.color);
+      .data(this.outSources, this.dataId)
+      .enter()
+      .append('path')
+      .classed('out-source', true)
+      .attr('d', arc)
+      .attr('transform', `translate(${this.width / 2}, ${this.height / 2})`)
+      .style('fill', d => d.color);
 
     this.pack = d3.pack().size([this.fullWidth - 20, this.fullHeight - 20]);
 
     this.circle = this.svgD3.select('.bubbles').selectAll('.in-circle')
-    .data(this.pack(this.hierarchy).descendants())
-    .enter()
-    .append('circle')
-    .classed('in-circle', true)
-    .style('fill', el => !el.parent ? 'rgba(0, 0, 0, 0)' : this.inColor)
-    .attr('cx', d => d.x)
-    .attr('cy', d => d.y)
-    .attr('r', d => d.r || 0);
+      .data(this.pack(this.hierarchy).descendants())
+      .enter()
+      .append('circle')
+      .classed('in-circle', true)
+      .style('fill', el => !el.parent ? 'rgba(0, 0, 0, 0)' : this.inColor)
+      .attr('cx', d => d.x)
+      .attr('cy', d => d.y)
+      .attr('r', d => d.r || 0);
   }
 
   redrawData() {
@@ -289,96 +296,96 @@ export class Bubbles extends Component {
     this.recalculateAngles();
 
     const arc = d3.arc()
-    .startAngle(d => d.startAngle)
-    .endAngle(d => d.endAngle)
-    .innerRadius(this.width / 2 - 50)
-    .outerRadius(this.width / 2 - 30);
+      .startAngle(d => d.startAngle)
+      .endAngle(d => d.endAngle)
+      .innerRadius(this.width / 2 - 50)
+      .outerRadius(this.width / 2 - 30);
 
     this.outSourcesArc = this.svgD3.select('.bubbles').selectAll('.out-source');
 
     this.outSourcesArc.data(this.outSources, this.dataId)
-    .enter()
-    .append('path')
-    .classed('out-source', true)
-    .attr('transform', `translate(${this.width / 2}, ${this.height / 2})`)
-    .transition()
-    .ease(d3.easeExpOut)
-    .duration(1000)
-    .attr('d', arc)
-    .style('fill', d => d.color)
-    .style('opacity', isProducing ? 1 : 0);
+      .enter()
+      .append('path')
+      .classed('out-source', true)
+      .attr('transform', `translate(${this.width / 2}, ${this.height / 2})`)
+      .transition()
+      .ease(d3.easeExpOut)
+      .duration(1000)
+      .attr('d', arc)
+      .style('fill', d => d.color)
+      .style('opacity', isProducing ? 1 : 0);
 
     this.outSourcesArc
-    .style('fill', d => d.color)
-    .transition()
-    .ease(d3.easeExpOut)
-    .duration(1000)
-    .style('opacity', isProducing ? 1 : 0)
-    .attrTween('d', function (d) {
-      const i = d3.interpolate(d.old, d);
-      d.old = i(0);
-      return (t) => arc(i(t));
-    });
+      .style('fill', d => d.color)
+      .transition()
+      .ease(d3.easeExpOut)
+      .duration(1000)
+      .style('opacity', isProducing ? 1 : 0)
+      .attrTween('d', function (d) {
+        const i = d3.interpolate(d.old, d);
+        d.old = i(0);
+        return (t) => arc(i(t));
+      });
 
     this.outSourcesArc.data(this.outSources, this.dataId)
-    .exit()
-    .transition()
-    .duration(200)
-    .style('opacity', 0)
-    .remove();
+      .exit()
+      .transition()
+      .duration(200)
+      .style('opacity', 0)
+      .remove();
 
     this.pack = d3.pack().size([this.fullWidth / scale - 20, this.fullHeight / scale - 20]);
 
     this.circle = this.svgD3.select('.bubbles').selectAll('.in-circle');
 
     this.circle.data(this.pack(this.hierarchy).descendants())
-    .enter()
-    .append('circle')
-    .classed('in-circle', true)
-    .style('fill', el => {
-      if (!el.parent) return 'rgba(0, 0, 0, 0)';
-      return this.inColor;
-    })
-    .transition()
-    .ease(d3.easeExpOut)
-    .duration(1000)
-    .attr('cx', d => (d.x + (((this.fullWidth) - (this.fullWidth / scale)) / 2)))
-    .attr('cy', d => (d.y + (((this.fullHeight) - (this.fullHeight / scale)) / 2 + margin)))
-    .attr('r', d => d.r || 0)
+      .enter()
+      .append('circle')
+      .classed('in-circle', true)
+      .style('fill', el => {
+        if (!el.parent) return 'rgba(0, 0, 0, 0)';
+        return this.inColor;
+      })
+      .transition()
+      .ease(d3.easeExpOut)
+      .duration(1000)
+      .attr('cx', d => ((d.x || 0) + (((this.fullWidth) - (this.fullWidth / scale)) / 2)))
+      .attr('cy', d => ((d.y || 0) + (((this.fullHeight) - (this.fullHeight / scale)) / 2 + margin)))
+      .attr('r', d => d.r || 0)
 
     this.circle
-    .transition()
-    .ease(d3.easeExpOut)
-    .duration(1000)
-    .attr('cx', d => (d.x + (((this.fullWidth) - (this.fullWidth / scale)) / 2)))
-    .attr('cy', d => (d.y + (((this.fullHeight) - (this.fullHeight / scale)) / 2 + margin)))
-    .attr('r', d => d.r || 0);
+      .transition()
+      .ease(d3.easeExpOut)
+      .duration(1000)
+      .attr('cx', d => ((d.x || 0) + (((this.fullWidth) - (this.fullWidth / scale)) / 2)))
+      .attr('cy', d => ((d.y || 0) + (((this.fullHeight) - (this.fullHeight / scale)) / 2 + margin)))
+      .attr('r', d => d.r || 0);
 
     this.circle.data(this.pack(this.hierarchy).descendants())
-    .exit()
-    .transition()
-    .duration(200)
-    .attr('r', 0)
-    .style('opacity', 0)
-    .remove();
+      .exit()
+      .transition()
+      .duration(200)
+      .attr('r', 0)
+      .style('opacity', 0)
+      .remove();
 
     this.outArc.transition()
-    .ease(d3.easeExpOut)
-    .duration(1000)
-    .style('opacity', isProducing ? 1 : 0);
+      .ease(d3.easeExpOut)
+      .duration(1000)
+      .style('opacity', isProducing ? 1 : 0);
 
     this.outCircle.data(this.outCombined(), this.dataId)
-    .transition()
-    .ease(d3.easeExpOut)
-    .duration(1000)
-    .style('opacity', isProducing ? 0 : 1)
-    .attr('r', d => (isProducing ? this.width / 2 : this.radius(this.dataWeight)(d.value)));
+      .transition()
+      .ease(d3.easeExpOut)
+      .duration(1000)
+      .style('opacity', isProducing ? 0 : 1)
+      .attr('r', d => (isProducing ? this.width / 2 : this.radius(this.dataWeight)(d.value)));
 
     this.svgD3.select('.bg-circle')
-    .transition()
-    .ease(d3.easeExpOut)
-    .duration(1000)
-    .style('opacity', isProducing ? 1 : 0)
+      .transition()
+      .ease(d3.easeExpOut)
+      .duration(1000)
+      .style('opacity', isProducing ? 1 : 0)
   }
 
   componentWillUnmount() {

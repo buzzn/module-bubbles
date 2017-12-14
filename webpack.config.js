@@ -6,7 +6,7 @@ const DashboardPlugin = require('webpack-dashboard/plugin');
 module.exports = {
   devtool: 'sourcemap',
   entry: [
-    'babel-polyfill',
+    '@babel/polyfill',
     'bootstrap-loader',
     'react-hot-loader/patch',
     'webpack/hot/only-dev-server',
@@ -26,8 +26,22 @@ module.exports = {
         exclude: /(node_modules|bower_components)/,
         loader: 'babel-loader',
         query: {
-          presets: [['es2015', { modules: false }], 'stage-0', 'react'],
-          plugins: ['react-hot-loader/babel'],
+          presets: [
+            ['@babel/env', {
+              targets: {
+                browsers: ['last 2 versions', 'safari >= 7'],
+                modules: false,
+              },
+            }],
+            '@babel/react',
+          ],
+          plugins: [
+            'react-hot-loader/babel',
+            '@babel/plugin-proposal-class-properties',
+            '@babel/plugin-proposal-object-rest-spread',
+            '@babel/plugin-syntax-object-rest-spread',
+            '@babel/plugin-syntax-class-properties'
+          ],
         },
       },
       {

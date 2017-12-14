@@ -5,6 +5,7 @@ import api from './api';
 import { logException } from './_util';
 
 let errReporter = null;
+let adminApp = false;
 
 export const getGroupId = state => state.bubbles.groupId;
 
@@ -12,7 +13,7 @@ export function* getGroupBubbles({ apiUrl, apiPath, token, groupId, timeout }) {
   yield put(actions.loading());
   try {
     // const registers = yield call(api.fetchGroupBubblesFake, { apiUrl, apiPath, token, groupId });
-    const registers = yield call(api.fetchGroupBubbles, { apiUrl, apiPath, token, groupId, timeout });
+    const registers = yield call(api.fetchGroupBubbles, { apiUrl, apiPath, token, groupId, timeout, adminApp });
     yield put(actions.setRegisters(registers));
   } catch (error) {
     logException(error, null, errReporter);
@@ -46,8 +47,9 @@ export function* bubblesSagas({ apiUrl, apiPath, token, groupId, timeout }) {
   }
 }
 
-export default function* (appErrReporter) {
+export default function* (appErrReporter, isAdminApp) {
   errReporter = appErrReporter;
+  adminApp = isAdminApp;
   const { apiUrl, apiPath, timeout = 10 * 1000 } = yield take(constants.SET_API_PARAMS);
   let { token } = yield take(constants.SET_TOKEN);
   let groupId = yield select(getGroupId);

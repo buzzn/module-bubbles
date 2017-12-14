@@ -2,6 +2,7 @@ import 'whatwg-fetch';
 import range from 'lodash/range';
 import filter from 'lodash/filter';
 import find from 'lodash/find';
+import get from 'lodash/get';
 import { req, prepareHeaders, parseResponse, camelizeResponseKeys } from './_util';
 
 function guid() {
@@ -34,15 +35,15 @@ const mainInPoints = range(getRandomIntInclusive(5, 20)).map(num => ({ resource_
 const mainPoints = mainOutPoints.concat(mainInPoints);
 
 export default {
-  fetchGroupBubbles({ apiUrl, apiPath, token, groupId, timeout }) {
+  fetchGroupBubbles({ apiUrl, apiPath, token, groupId, timeout, adminApp }) {
     return req({
       method: 'GET',
-      url: `${apiUrl}${apiPath}/${groupId}/registers`,
+      url: adminApp ? `${apiUrl}${apiPath}/${groupId}?include=meters:[registers]` : `${apiUrl}${apiPath}/${groupId}/registers`,
       headers: { ...prepareHeaders(token), 'Cache-Control': 'no-cache' },
     }, timeout)
     .then(str => camelizeResponseKeys(JSON.parse(str)))
-    .then(registersRes => {
-      const registers = registersRes.array;
+    .then(res => {
+      const registers = adminApp ? get(res.meters, 'array', []).reduce((sum, meter) => get(meter.registers, 'array', []).concat(sum), []) : res.array;
       return req({
         method: 'GET',
         url: `${apiUrl}${apiPath}/${groupId}/bubbles`,

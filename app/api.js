@@ -3,7 +3,7 @@ import range from 'lodash/range';
 import filter from 'lodash/filter';
 import find from 'lodash/find';
 import get from 'lodash/get';
-import { req, prepareHeaders, parseResponse, camelizeResponseKeys } from './_util';
+import { req, prepareHeaders, parseResponse, camelizeResponseKeys, camelizeResponseArray } from './_util';
 
 function guid() {
   return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
@@ -38,20 +38,10 @@ export default {
   fetchGroupBubbles({ apiUrl, apiPath, token, groupId, timeout, adminApp }) {
     return req({
       method: 'GET',
-      url: adminApp ? `${apiUrl}${apiPath}/${groupId}?include=meters:[registers]` : `${apiUrl}${apiPath}/${groupId}/registers`,
+      url: `${apiUrl}${apiPath}/${groupId}/bubbles`,
       headers: { ...prepareHeaders(token), 'Cache-Control': 'no-cache' },
     }, timeout)
-    .then(str => camelizeResponseKeys(JSON.parse(str)))
-    .then(res => {
-      const registers = adminApp ? get(res.meters, 'array', []).reduce((sum, meter) => get(meter.registers, 'array', []).concat(sum), []) : res.array;
-      return req({
-        method: 'GET',
-        url: `${apiUrl}${apiPath}/${groupId}/bubbles`,
-        headers: { ...prepareHeaders(token), 'Cache-Control': 'no-cache' },
-      }, timeout)
-      .then(str => camelizeResponseKeys(JSON.parse(str)))
-      .then(bubbles => filter(bubbles.array, b => find(registers, r => r.id === b.resourceId)).map(b => ({ ...b, id: b.resourceId, label: find(registers, r => r.id === b.resourceId).label })));
-    });
+      .then(str => camelizeResponseArray(JSON.parse(str)));
   },
   // fetchGroupBubbles({ apiUrl, apiPath, token, groupId }) {
   //   return fetch(`${apiUrl}${apiPath}/${groupId}/registers`, {

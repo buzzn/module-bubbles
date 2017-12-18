@@ -3,6 +3,7 @@ import range from 'lodash/range';
 import filter from 'lodash/filter';
 import find from 'lodash/find';
 import get from 'lodash/get';
+import map from 'lodash/map';
 import { req, prepareHeaders, parseResponse, camelizeResponseKeys, camelizeResponseArray } from './_util';
 
 function guid() {
@@ -44,7 +45,7 @@ export default {
       .then(camelizeResponseKeys)
       .then(res => {
         if (res._status === 200) {
-          return { ...res, array: (res.body || []).map(r => ({ ...r, value: r.value < 0 ? 0 : (r.value / 1000) })) }
+          return { ...res, array: map(JSON.parse(res.body), r => ({ ...r, value: r.value < 0 ? 0 : (r.value / 1000) })) };
         } else {
           return { ...res, array: [] };
         }

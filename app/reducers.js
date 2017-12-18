@@ -1,6 +1,6 @@
 import { constants } from './actions';
 
-export default (state = { loading: false, registers: [] }, action) => {
+export default (state = { loading: false, registers: { _status: null, array: [] } }, action) => {
   switch (action.type) {
     case constants.SET_GROUP_ID:
       return { ...state, groupId: action.groupId };

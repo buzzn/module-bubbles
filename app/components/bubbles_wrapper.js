@@ -14,7 +14,7 @@ BubblesWrapper.defaultProps = {
 
 function mapStateToProps(state) {
   return {
-    registers: state.bubbles.registers,
+    registers: state.bubbles.registers.array,
     loading: state.bubbles.loading,
   };
 }

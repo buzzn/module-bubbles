@@ -13,9 +13,9 @@ export function req(reqObj, timeout) {
     }
     xhr.onload = () => {
       if (xhr.status >= 200 && xhr.status < 300) {
-        resolve(xhr.response);
+        resolve({ body: xhr.response, _status: 200 });
       } else {
-        reject(xhr.statusText);
+        resolve({ _status: xhr.status });
       }
     };
     xhr.onerror = () => reject(xhr.statusText);
@@ -36,9 +36,9 @@ export function prepareHeaders(token) {
 export function parseResponse(response) {
   const json = response.json();
   if (response.status >= 200 && response.status < 300) {
-    return json;
+    return json.then(res => ({ ...res, _status: 200 }));
   } else {
-    return json.then(error => Promise.reject(error));
+    return Promise.resolve({ _status: response.status });
   }
 }
 

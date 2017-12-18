@@ -32,11 +32,11 @@ export function* bubblesSagas({ apiUrl, apiPath, token, groupId, timeout }) {
 
       if (newGroupId) {
         groupId = newGroupId.groupId;
-        yield put(actions.setRegisters([]));
+        yield put(actions.setRegisters({ _status: null, array: [] }));
       }
       if (stopRequests) {
         groupId = null;
-        yield put(actions.setRegisters([]));
+        yield put(actions.setRegisters({ _status: null, array: [] }));
       }
     } else {
       const newGroupId = yield take(constants.SET_GROUP_ID);

@@ -41,7 +41,8 @@ export default {
       url: `${apiUrl}${apiPath}/${groupId}/bubbles`,
       headers: { ...prepareHeaders(token), 'Cache-Control': 'no-cache' },
     }, timeout)
-      .then(str => camelizeResponseArray(JSON.parse(str)));
+      .then(str => camelizeResponseArray(JSON.parse(str)))
+      .then(res => res.map(r => ({ ...r, value: r.value < 0 ? 0 : (r.value / 1000) })));
   },
   // fetchGroupBubbles({ apiUrl, apiPath, token, groupId }) {
   //   return fetch(`${apiUrl}${apiPath}/${groupId}/registers`, {

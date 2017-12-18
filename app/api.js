@@ -45,7 +45,7 @@ export default {
       .then(camelizeResponseKeys)
       .then(res => {
         if (res._status === 200) {
-          return { ...res, array: map(JSON.parse(res.body), r => ({ ...r, value: r.value < 0 ? 0 : (r.value / 1000) })) };
+          return { ...res, array: map(JSON.parse(res.body), r => ({ ...r, value: r.value < 0 ? 0 : r.value })) };
         } else {
           return { ...res, array: [] };
         }

@@ -58,15 +58,16 @@ export function camelizeResponseArray(data) {
 
 export function camelizeResponseKeys(data) {
   const result = {};
-  forEach(data, (v, k) => {
+  forEach(data, (v, _k) => {
+    const k = _k === '_status' ? _k : camelCase(_k);
     if (Array.isArray(v)) {
-      result[camelCase(k)] = camelizeResponseArray(v);
+      result[k] = camelizeResponseArray(v);
     } else if (!v) {
-      result[camelCase(k)] = v;
+      result[k] = v;
     } else if (typeof v === 'object') {
-      result[camelCase(k)] = camelizeResponseKeys(v);
+      result[k] = camelizeResponseKeys(v);
     } else {
-      result[camelCase(k)] = v;
+      result[k] = v;
     }
   });
   return result;

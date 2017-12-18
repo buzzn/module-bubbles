@@ -41,7 +41,7 @@ export default {
       url: `${apiUrl}${apiPath}/${groupId}/bubbles`,
       headers: { ...prepareHeaders(token), 'Cache-Control': 'no-cache' },
     }, timeout)
-      .then(str => camelizeResponseKeys(JSON.parse(str)))
+      .then(camelizeResponseKeys(str))
       .then(res => {
         if (res._status === 200) {
           return { ...res, array: res.body.map(r => ({ ...r, value: r.value < 0 ? 0 : (r.value / 1000) })) }

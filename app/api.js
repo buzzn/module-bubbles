@@ -48,9 +48,10 @@ export default {
       headers: { ...prepareHeaders(token), 'Cache-Control': 'no-cache' },
     }, timeout)
       .then(camelizeResponseKeys)
-      .then(res => {
-        if (res._status === 200) {
-          return { ...res, array: map(JSON.parse(res.body), r => ({ ...r, value: r.value < 0 ? 0 : r.value })) };
+      .then(rawRes => {
+        const { body, ...res } = rawRes;
+        if (res._status === 200 && body) {
+          return { ...res, array: map(JSON.parse(body), r => ({ ...r, value: r.value < 0 ? 0 : r.value })) };
         } else {
           return { ...res, array: [] };
         }

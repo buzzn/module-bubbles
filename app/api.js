@@ -45,7 +45,7 @@ export default {
     return req({
       method: 'GET',
       url: `${apiUrl}${apiPath}/${groupId}/bubbles`,
-      headers: { ...prepareHeaders(token), 'Cache-Control': 'no-cache' },
+      headers: prepareHeaders(token),
     }, timeout)
       .then(camelizeResponseKeys)
       .then(rawRes => {

@@ -37,6 +37,7 @@ export class Bubbles extends Component {
     this.pack = null;
     this.circle = null;
     this.text = null;
+    this.name = null;
     this.outCircle = null;
     this.outArc = null;
     this.outSources = [];
@@ -108,6 +109,7 @@ export class Bubbles extends Component {
       id: point.id,
       value: point.value,
       label: point.label.toLowerCase(),
+      name: point.name,
       color: this.colors[point.label.toLowerCase()],
     });
 
@@ -303,6 +305,10 @@ export class Bubbles extends Component {
 
     this.text = this.svgD3.select('.bubbles').selectAll('.in-text').data(this.pack(this.hierarchy).descendants());
 
+    // FIXME: wrapping text into tspan (see wrapping long labels example) leads to less controllable rows and overcomplicated renderer.
+    // Fix it later, there must be cleaner solution.
+    this.name = this.svgD3.select('.bubbles').selectAll('.in-name').data(this.pack(this.hierarchy).descendants());
+
     this.circle
       .exit()
       .transition()
@@ -312,6 +318,14 @@ export class Bubbles extends Component {
       .remove();
 
     this.text
+      .exit()
+      .transition()
+      .duration(200)
+      .attr('r', 0)
+      .style('opacity', 0)
+      .remove();
+
+    this.name
       .exit()
       .transition()
       .duration(200)
@@ -334,6 +348,15 @@ export class Bubbles extends Component {
       .attr('x', d => ((d.x || 0) + (((this.fullWidth) - (this.fullWidth / scale)) / 2) - (d.r || 0) + ((d.r || 0) / 8)))
       .attr('y', d => ((d.y || 0) + (((this.fullHeight) - (this.fullHeight / scale)) / 2 + margin + ((d.r || 0) / 8))))
       .text(d => d.data.label === 'consumption_common' ? formatLabel(d.data.value) : '')
+      .attr('font-size', d => d.r / 2);
+
+    this.name
+      .transition()
+      .ease(d3.easeExpOut)
+      .duration(1000)
+      .attr('x', d => ((d.x || 0) + (((this.fullWidth) - (this.fullWidth / scale)) / 2) - (d.r || 0) + ((d.r || 0) / 8)))
+      .attr('y', d => ((d.y || 0) + (((this.fullHeight) - (this.fullHeight / scale)) / 2 + margin + ((d.r || 0) / 2))))
+      .text(d => d.data.label === 'consumption_common' ? d.data.name : '')
       .attr('font-size', d => d.r / 2);
 
     this.circle
@@ -361,6 +384,20 @@ export class Bubbles extends Component {
       .attr('x', d => ((d.x || 0) + (((this.fullWidth) - (this.fullWidth / scale)) / 2) - (d.r || 0) + ((d.r || 0) / 8)))
       .attr('y', d => ((d.y || 0) + (((this.fullHeight) - (this.fullHeight / scale)) / 2 + margin + ((d.r || 0) / 8))))
       .text(d => d.data.label === 'consumption_common' ? formatLabel(d.data.value) : '')
+      .attr('font-size', d => d.r / 2)
+      .attr('font-family', 'Asap')
+      .attr('fill', 'white');
+
+    this.name
+      .enter()
+      .append('text')
+      .classed('in-name', true)
+      .transition()
+      .ease(d3.easeExpOut)
+      .duration(1000)
+      .attr('x', d => ((d.x || 0) + (((this.fullWidth) - (this.fullWidth / scale)) / 2) - (d.r || 0) + ((d.r || 0) / 8)))
+      .attr('y', d => ((d.y || 0) + (((this.fullHeight) - (this.fullHeight / scale)) / 2 + margin + ((d.r || 0) / 2))))
+      .text(d => d.data.label === 'consumption_common' ? d.data.name : '')
       .attr('font-size', d => d.r / 2)
       .attr('font-family', 'Asap')
       .attr('fill', 'white');

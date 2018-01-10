@@ -12,8 +12,8 @@ export const getGroupId = state => state.bubbles.groupId;
 export function* getGroupBubbles({ apiUrl, apiPath, token, groupId, timeout }) {
   yield put(actions.loading());
   try {
-    const registers = yield call(api.fetchGroupBubblesFake, { apiUrl, apiPath, token, groupId });
-    // const registers = yield call(api.fetchGroupBubbles, { apiUrl, apiPath, token, groupId, timeout, adminApp });
+    // const registers = yield call(api.fetchGroupBubblesFake, { apiUrl, apiPath, token, groupId });
+    const registers = yield call(api.fetchGroupBubbles, { apiUrl, apiPath, token, groupId, timeout, adminApp });
     yield put(actions.setRegisters(registers));
   } catch (error) {
     logException(error, null, errReporter);

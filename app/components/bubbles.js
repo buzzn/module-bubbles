@@ -36,7 +36,7 @@ export class Bubbles extends Component {
     this.hierarchy = null;
     this.pack = null;
     this.circle = null;
-    this.text = null;
+    this.value = null;
     this.name = null;
     this.outCircle = null;
     this.outArc = null;
@@ -243,6 +243,10 @@ export class Bubbles extends Component {
   }
 
   redrawData() {
+    const { widgetScale = 1 } = this.props;
+    const { width: svgWidth, height: svgHeight } = this.svgDom.getBoundingClientRect();
+    const widgetSize = Math.min(svgWidth, svgHeight);
+
     this.hierarchy = d3.hierarchy(this.inData).sum(d => d.value);
 
     const isProducing = reduce(this.outData, (s, d) => s + d.value, 0) >= reduce(this.inData.children, (s, d) => s + d.value, 0);
@@ -303,35 +307,20 @@ export class Bubbles extends Component {
 
     this.circle = this.svgD3.select('.bubbles').selectAll('.in-circle').data(this.pack(this.hierarchy).descendants());
 
-    this.text = this.svgD3.select('.bubbles').selectAll('.in-text').data(this.pack(this.hierarchy).descendants());
+    this.value = this.svgD3.select('.bubbles').selectAll('.in-value').data(this.pack(this.hierarchy).descendants());
 
     // FIXME: wrapping text into tspan (see wrapping long labels example) leads to less controllable rows and overcomplicated renderer.
     // Fix it later, there must be cleaner solution.
     this.name = this.svgD3.select('.bubbles').selectAll('.in-name').data(this.pack(this.hierarchy).descendants());
 
-    this.circle
-      .exit()
-      .transition()
-      .duration(200)
-      .attr('r', 0)
-      .style('opacity', 0)
-      .remove();
-
-    this.text
-      .exit()
-      .transition()
-      .duration(200)
-      .attr('r', 0)
-      .style('opacity', 0)
-      .remove();
-
-    this.name
-      .exit()
-      .transition()
-      .duration(200)
-      .attr('r', 0)
-      .style('opacity', 0)
-      .remove();
+    ['circle', 'value', 'name'].forEach((type) => {
+      this[type].exit()
+        .transition()
+        .duration(200)
+        .attr('r', 0)
+        .style('opacity', 0)
+        .remove();
+    });
 
     this.circle
       .transition()
@@ -341,23 +330,23 @@ export class Bubbles extends Component {
       .attr('cy', d => ((d.y || 0) + (((this.fullHeight) - (this.fullHeight / scale)) / 2 + margin)))
       .attr('r', d => d.r || 0);
 
-    this.text
+    this.value
       .transition()
       .ease(d3.easeExpOut)
       .duration(1000)
-      .attr('x', d => ((d.x || 0) + (((this.fullWidth) - (this.fullWidth / scale)) / 2) - (d.r || 0) + ((d.r || 0) / 8)))
-      .attr('y', d => ((d.y || 0) + (((this.fullHeight) - (this.fullHeight / scale)) / 2 + margin + ((d.r || 0) / 8))))
-      .text(d => d.data.label === 'consumption_common' ? formatLabel(d.data.value) : '')
-      .attr('font-size', d => d.r / 2);
+      .attr('x', d => ((d.x || 0) + (((this.fullWidth) - (this.fullWidth / scale)) / 2)))
+      .attr('y', (d) => {
+        const scSize = d3.scaleLinear().domain([0, 1000]).range([0, widgetSize * widgetScale]);
+        if (scSize(d.r * 2) < 100) return ((d.y || 0) + (((this.fullHeight) - (this.fullHeight / scale)) / 2 + margin + ((d.r || 0) / 5)));
+        return ((d.y || 0) + (((this.fullHeight) - (this.fullHeight / scale)) / 2 + margin));
+      });
 
     this.name
       .transition()
       .ease(d3.easeExpOut)
       .duration(1000)
-      .attr('x', d => ((d.x || 0) + (((this.fullWidth) - (this.fullWidth / scale)) / 2) - (d.r || 0) + ((d.r || 0) / 8)))
-      .attr('y', d => ((d.y || 0) + (((this.fullHeight) - (this.fullHeight / scale)) / 2 + margin + ((d.r || 0) / 2))))
-      .text(d => d.data.label === 'consumption_common' ? d.data.name : '')
-      .attr('font-size', d => d.r / 2);
+      .attr('x', d => ((d.x || 0) + (((this.fullWidth) - (this.fullWidth / scale)) / 2)))
+      .attr('y', d => ((d.y || 0) + (((this.fullHeight) - (this.fullHeight / scale)) / 2 + margin + ((d.r || 0) / 3))));
 
     this.circle
       .enter()
@@ -374,19 +363,47 @@ export class Bubbles extends Component {
       .attr('cy', d => ((d.y || 0) + (((this.fullHeight) - (this.fullHeight / scale)) / 2 + margin)))
       .attr('r', d => d.r || 0);
 
-    this.text
+    this.value
       .enter()
       .append('text')
-      .classed('in-text', true)
+      .classed('in-value', true)
       .transition()
       .ease(d3.easeExpOut)
       .duration(1000)
-      .attr('x', d => ((d.x || 0) + (((this.fullWidth) - (this.fullWidth / scale)) / 2) - (d.r || 0) + ((d.r || 0) / 8)))
-      .attr('y', d => ((d.y || 0) + (((this.fullHeight) - (this.fullHeight / scale)) / 2 + margin + ((d.r || 0) / 8))))
-      .text(d => d.data.label === 'consumption_common' ? formatLabel(d.data.value) : '')
-      .attr('font-size', d => d.r / 2)
-      .attr('font-family', 'Asap')
-      .attr('fill', 'white');
+      .attr('x', d => ((d.x || 0) + (((this.fullWidth) - (this.fullWidth / scale)) / 2)))
+      .attr('y', (d) => {
+        const scSize = d3.scaleLinear().domain([0, 1000]).range([0, widgetSize * widgetScale]);
+        if (scSize(d.r * 2) < 100) return ((d.y || 0) + (((this.fullHeight) - (this.fullHeight / scale)) / 2 + margin + ((d.r || 0) / 5)));
+        return ((d.y || 0) + (((this.fullHeight) - (this.fullHeight / scale)) / 2 + margin));
+      });
+
+    this.value.each(function(d, i) {
+      if (d.data.label !== 'consumption_common') return;
+      d3.select(this)
+        .selectAll('.in-text')
+        .remove();
+
+      const scSize = d3.scaleLinear().domain([0, 1000]).range([0, widgetSize * widgetScale]);
+      if (scSize(d.r * 2) < 60) return;
+
+      d3.select(this)
+        .append('tspan')
+        .classed('in-text', true)
+        .text(d => d.data.value)
+        .attr('text-anchor', 'middle')
+        .attr('font-size', d => d.r / 5 * 3)
+        .attr('font-family', 'Asap')
+        .attr('fill', 'rgba(255, 255, 255, 0.8)');
+
+      d3.select(this)
+        .append('tspan')
+        .classed('in-text', true)
+        .text(' W')
+        .attr('text-anchor', 'middle')
+        .attr('font-size', d => d.r / 5)
+        .attr('font-family', 'Asap')
+        .attr('fill', 'rgba(255, 255, 255, 0.8)');
+    });
 
     this.name
       .enter()
@@ -395,12 +412,27 @@ export class Bubbles extends Component {
       .transition()
       .ease(d3.easeExpOut)
       .duration(1000)
-      .attr('x', d => ((d.x || 0) + (((this.fullWidth) - (this.fullWidth / scale)) / 2) - (d.r || 0) + ((d.r || 0) / 8)))
-      .attr('y', d => ((d.y || 0) + (((this.fullHeight) - (this.fullHeight / scale)) / 2 + margin + ((d.r || 0) / 2))))
-      .text(d => d.data.label === 'consumption_common' ? d.data.name : '')
-      .attr('font-size', d => d.r / 2)
-      .attr('font-family', 'Asap')
-      .attr('fill', 'white');
+      .attr('x', d => ((d.x || 0) + (((this.fullWidth) - (this.fullWidth / scale)) / 2)))
+      .attr('y', d => ((d.y || 0) + (((this.fullHeight) - (this.fullHeight / scale)) / 2 + margin + ((d.r || 0) / 3))));
+
+    this.name.each(function(d, i) {
+      if (d.data.label !== 'consumption_common') return;
+      d3.select(this)
+        .selectAll('.in-text')
+        .remove();
+
+      const scSize = d3.scaleLinear().domain([0, 1000]).range([0, widgetSize * widgetScale]);
+      if (scSize(d.r * 2) < 100) return;
+
+      d3.select(this)
+        .append('tspan')
+        .classed('in-text', true)
+        .text(d => d.data.name)
+        .attr('text-anchor', 'middle')
+        .attr('font-size', d => Math.min(d.r / 5, ((d.r / 5) / this.getComputedTextLength() * 150)))
+        .attr('font-family', 'Asap')
+        .attr('fill', 'rgba(255, 255, 255, 0.8)');
+    });
 
     this.outArc.transition()
       .ease(d3.easeExpOut)

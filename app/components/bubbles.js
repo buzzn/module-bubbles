@@ -434,7 +434,7 @@ export class Bubbles extends Component {
         .text(d => {
           if (!d.data.name) return '';
           if (d.data.name.length <= 20) return d.data.name;
-          return `${d.data.name.slice(0, 20)}&hellip;`;
+          return `${d.data.name.slice(0, 17)}...`;
         })
         .attr('text-anchor', 'middle')
         .attr('font-size', d => Math.min(d.r / 5, ((d.r / 5) / this.getComputedTextLength() * 150)))

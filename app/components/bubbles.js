@@ -336,6 +336,7 @@ export class Bubbles extends Component {
       .duration(1000)
       .attr('x', d => ((d.x || 0) + (((this.fullWidth) - (this.fullWidth / scale)) / 2)))
       .attr('y', (d) => {
+        if (d.data.label !== 'consumption_common') return 0;
         const scSize = d3.scaleLinear().domain([0, 1000]).range([0, widgetSize * widgetScale]);
         if (scSize(d.r * 2) < 100) return ((d.y || 0) + (((this.fullHeight) - (this.fullHeight / scale)) / 2 + margin + ((d.r || 0) / 5)));
         return ((d.y || 0) + (((this.fullHeight) - (this.fullHeight / scale)) / 2 + margin));
@@ -372,6 +373,7 @@ export class Bubbles extends Component {
       .duration(1000)
       .attr('x', d => ((d.x || 0) + (((this.fullWidth) - (this.fullWidth / scale)) / 2)))
       .attr('y', (d) => {
+        if (d.data.label !== 'consumption_common') return 0;
         const scSize = d3.scaleLinear().domain([0, 1000]).range([0, widgetSize * widgetScale]);
         if (scSize(d.r * 2) < 100) return ((d.y || 0) + (((this.fullHeight) - (this.fullHeight / scale)) / 2 + margin + ((d.r || 0) / 5)));
         return ((d.y || 0) + (((this.fullHeight) - (this.fullHeight / scale)) / 2 + margin));
@@ -429,7 +431,11 @@ export class Bubbles extends Component {
       d3.select(this)
         .append('tspan')
         .classed('in-text', true)
-        .text(d => d.data.name)
+        .text(d => {
+          if (!d.data.name) return '';
+          if (d.data.name.length <= 20) return d.data.name;
+          return `${d.data.name.slice(0, 20)}&hellip;`;
+        })
         .attr('text-anchor', 'middle')
         .attr('font-size', d => Math.min(d.r / 5, ((d.r / 5) / this.getComputedTextLength() * 150)))
         .attr('font-family', 'Asap')

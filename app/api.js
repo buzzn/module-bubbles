@@ -50,6 +50,7 @@ const mainInPoints = range(getRandomIntInclusive(5, 20)).map(num => ({
   value: 0,
   label: generateCLabel(),
   name: chance.company(),
+  // name: 'Haus Australien, Allgemeinstrom',
 }));
 const mainPoints = mainOutPoints.concat(mainInPoints);
 

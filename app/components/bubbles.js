@@ -6,7 +6,7 @@ import reduce from 'lodash/reduce';
 import map from 'lodash/map';
 import find from 'lodash/find';
 import findIndex from 'lodash/findIndex';
-import { formatLabel} from "../_util";
+import { formatLabel } from "../_util";
 
 const d3 = require('d3');
 
@@ -378,10 +378,11 @@ export class Bubbles extends Component {
       });
 
     this.value.each(function(d, i) {
-      if (d.data.label !== 'consumption_common') return;
       d3.select(this)
         .selectAll('.in-text')
         .remove();
+
+      if (d.data.label !== 'consumption_common') return;
 
       const scSize = d3.scaleLinear().domain([0, 1000]).range([0, widgetSize * widgetScale]);
       if (scSize(d.r * 2) < 60) return;
@@ -389,7 +390,7 @@ export class Bubbles extends Component {
       d3.select(this)
         .append('tspan')
         .classed('in-text', true)
-        .text(d => d.data.value)
+        .text(d => formatLabel(d.data.value).split(' ')[0])
         .attr('text-anchor', 'middle')
         .attr('font-size', d => d.r / 5 * 3)
         .attr('font-family', 'Asap')
@@ -398,7 +399,7 @@ export class Bubbles extends Component {
       d3.select(this)
         .append('tspan')
         .classed('in-text', true)
-        .text(' W')
+        .text(d => formatLabel(d.data.value).split(' ')[1])
         .attr('text-anchor', 'middle')
         .attr('font-size', d => d.r / 5)
         .attr('font-family', 'Asap')
@@ -416,10 +417,11 @@ export class Bubbles extends Component {
       .attr('y', d => ((d.y || 0) + (((this.fullHeight) - (this.fullHeight / scale)) / 2 + margin + ((d.r || 0) / 3))));
 
     this.name.each(function(d, i) {
-      if (d.data.label !== 'consumption_common') return;
       d3.select(this)
         .selectAll('.in-text')
         .remove();
+
+      if (d.data.label !== 'consumption_common') return;
 
       const scSize = d3.scaleLinear().domain([0, 1000]).range([0, widgetSize * widgetScale]);
       if (scSize(d.r * 2) < 100) return;

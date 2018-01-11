@@ -5,18 +5,14 @@ import find from 'lodash/find';
 import get from 'lodash/get';
 import map from 'lodash/map';
 import sample from 'lodash/sample';
-import { req, prepareHeaders, parseResponse, camelizeResponseKeys, camelizeResponseArray } from './_util';
-
-function guid() {
-  return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
-    s4() + '-' + s4() + s4() + s4();
-}
-
-function s4() {
-  return Math.floor((1 + Math.random()) * 0x10000)
-  .toString(16)
-  .substring(1);
-}
+const chance = require('chance').Chance();
+import {
+  req,
+  prepareHeaders,
+  parseResponse,
+  camelizeResponseKeys,
+  camelizeResponseArray,
+} from './_util';
 
 function getRandomIntInclusive(min, max) {
   min = Math.ceil(min);
@@ -25,7 +21,12 @@ function getRandomIntInclusive(min, max) {
 }
 
 function generatePLabel() {
-  return sample(['production_pv', 'production_chp', 'production_water', 'production_wind']);
+  return sample([
+    'production_pv',
+    'production_chp',
+    'production_water',
+    'production_wind',
+  ]);
 }
 
 function generateCLabel() {
@@ -36,25 +37,46 @@ function processPoints(pointsArr) {
   return pointsArr.map(p => ({ ...p, id: p.resource_id }));
 }
 
-const mainOutPoints = range(getRandomIntInclusive(5, 20)).map(num => ({ resource_id: guid(), mode: 'out', value: 0, label: generatePLabel() }));
-const mainInPoints = range(getRandomIntInclusive(5, 20)).map(num => ({ resource_id: guid(), mode: 'in', value: 0, label: generateCLabel() }));
+const mainOutPoints = range(getRandomIntInclusive(5, 20)).map(num => ({
+  resource_id: chance.guid(),
+  mode: 'out',
+  value: 0,
+  label: generatePLabel(),
+  name: chance.company(),
+}));
+const mainInPoints = range(getRandomIntInclusive(5, 20)).map(num => ({
+  resource_id: chance.guid(),
+  mode: 'in',
+  value: 0,
+  label: generateCLabel(),
+  name: chance.company(),
+  // name: 'Haus Australien, Allgemeinstrom',
+}));
 const mainPoints = mainOutPoints.concat(mainInPoints);
 
 export default {
   fetchGroupBubbles({ apiUrl, apiPath, token, groupId, timeout, adminApp }) {
-    return req({
-      method: 'GET',
-      url: `${apiUrl}${apiPath}/${groupId}/bubbles`,
-      headers: { ...prepareHeaders(token), 'Cache-Control': 'no-cache' },
-    }, timeout)
+    return req(
+      {
+        method: 'GET',
+        url: `${apiUrl}${apiPath}/${groupId}/bubbles`,
+        headers: prepareHeaders(token),
+      },
+      timeout,
+    )
       .then(camelizeResponseKeys)
-      .then(rawRes => {
+      .then((rawRes) => {
         const { body, ...res } = rawRes;
         if (res._status === 200 && body) {
-          return { ...res, array: map(JSON.parse(body), r => ({ ...r, value: r.value < 0 ? 0 : r.value })) };
-        } else {
-          return { ...res, array: [] };
+          return {
+            ...res,
+            array: map(JSON.parse(body), r => ({
+              ...r,
+              value: r.value < 0 ? 0 : r.value,
+            })),
+          };
         }
+        return { ...res, array: [] };
       });
   },
   // fetchGroupBubbles({ apiUrl, apiPath, token, groupId }) {
@@ -74,11 +96,34 @@ export default {
   //   });
   // },
   fetchGroupBubblesFake({ apiUrl, apiPath, token, groupId }) {
-    const newMainPoints = mainPoints.map(p => ({ ...p, value: getRandomIntInclusive(5000, 10000) }));
-    const outPoints = range(getRandomIntInclusive(0, 2)).map(num => ({ resource_id: guid(), mode: 'out', value: getRandomIntInclusive(80000, 180000), label: generatePLabel() }));
-    const inPoints = range(getRandomIntInclusive(0, 10)).map(num => ({ c: true, resource_id: guid(), mode: 'in', value: getRandomIntInclusive(0, 10000), label: generateCLabel() }));
-    return new Promise((resolve) => {
-      setTimeout(() => { resolve({ _status: 200, array: processPoints(newMainPoints.concat(outPoints.concat(inPoints)))}); }, getRandomIntInclusive(100, 600));
+    const newMainPoints = mainPoints.map(p => ({
+      ...p,
+      value: getRandomIntInclusive(5000, 10000),
+    }));
+    const outPoints = range(getRandomIntInclusive(0, 2)).map(num => ({
+      resource_id: chance.guid(),
+      mode: 'out',
+      value: getRandomIntInclusive(80000, 180000),
+      label: generatePLabel(),
+      name: chance.company(),
+    }));
+    const inPoints = range(getRandomIntInclusive(0, 10)).map(num => ({
+      c: true,
+      resource_id: chance.guid(),
+      mode: 'in',
+      value: getRandomIntInclusive(0, 10000),
+      label: generateCLabel(),
+      name: chance.company(),
+    }));
+    return new Promise(resolve => {
+      setTimeout(() => {
+        resolve({
+          _status: 200,
+          array: processPoints(
+            newMainPoints.concat(outPoints.concat(inPoints)),
+          ),
+        });
+      }, getRandomIntInclusive(100, 600));
     });
   },
 };

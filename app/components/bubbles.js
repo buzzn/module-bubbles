@@ -6,6 +6,7 @@ import reduce from 'lodash/reduce';
 import map from 'lodash/map';
 import find from 'lodash/find';
 import findIndex from 'lodash/findIndex';
+import { formatLabel } from "../_util";
 
 const d3 = require('d3');
 
@@ -19,12 +20,15 @@ export class Bubbles extends Component {
 
     this.inData = { name: 'in', children: [] };
     this.outData = [];
-    this.inColor = 'rgba(128, 222, 234, 0.8)';
-    this.outColor = '#D4E157';
-    this.productionPvColor = '#ffeb3b';
-    this.productionChpColor = '#ffa726';
-    this.productionWaterColor = '#1e88e5';
-    this.productionWindColor = '#90caf9';
+    this.colors = {
+      consumption: 'rgba(128, 222, 234, 0.8)',
+      consumption_common: 'rgba(70, 202, 218, 0.8)',
+      out: '#D4E157',
+      production_pv: '#ffeb3b',
+      production_chp: '#ffa726',
+      production_water: '#1e88e5',
+      production_wind: '#90caf9',
+    };
     this.fullWidth = null;
     this.width = null;
     this.fullHeight = null;
@@ -32,6 +36,8 @@ export class Bubbles extends Component {
     this.hierarchy = null;
     this.pack = null;
     this.circle = null;
+    this.value = null;
+    this.name = null;
     this.outCircle = null;
     this.outArc = null;
     this.outSources = [];
@@ -102,7 +108,9 @@ export class Bubbles extends Component {
       c: point.c,
       id: point.id,
       value: point.value,
-      label: point.label,
+      label: point.label.toLowerCase(),
+      name: point.name,
+      color: this.colors[point.label.toLowerCase()],
     });
 
     forEach(pointsArr, (point) => {
@@ -157,22 +165,8 @@ export class Bubbles extends Component {
   recalculateAngles() {
     const totalPower = reduce(this.outData, (s, d) => s + d.value, 0);
     const sources = {};
-    const setColor = (label) => {
-      switch (label) {
-        case 'production_pv':
-          return this.productionPvColor;
-        case 'production_chp':
-          return this.productionChpColor;
-        case 'production_water':
-          return this.productionWaterColor;
-        case 'production_wind':
-          return this.productionWindColor;
-        default:
-          return this.outColor;
-      }
-    };
     forEach(this.outData, (d) => {
-      if (!sources[d.label]) sources[d.label] = { color: setColor(d.label), value: 0 };
+      if (!sources[d.label]) sources[d.label] = { color: this.colors[d.label] || this.colors['out'], value: 0 };
       sources[d.label].value += d.value;
     });
     const outSources = map(sources, (v, k) => ({ id: k, source: k, ...v }));
@@ -223,15 +217,13 @@ export class Bubbles extends Component {
       this.ticker = !this.ticker;
     }, 1000);
 
-    this.hierarchy = d3.hierarchy(this.inData).sum(d => d.value);
-
     const isProducing = reduce(this.outData, (s, d) => s + d.value, 0) >= reduce(this.inData.children, (s, d) => s + d.value, 0);
 
     this.outArc = this.svgD3.select('.bubbles')
       .append('circle')
       .classed('out-arc', true)
       .style('fill', 'rgba(0, 0, 0, 0)')
-      .style('stroke', this.outColor)
+      .style('stroke', this.colors['out'])
       .style('stroke-width', '20px')
       .attr('r', this.width / 2 - 20)
       .attr('cx', () => this.fullWidth / 2)
@@ -242,42 +234,19 @@ export class Bubbles extends Component {
       .enter()
       .append('circle')
       .classed('out-circle', true)
-      .style('fill', this.outColor)
+      .style('fill', this.colors['out'])
       .attr('r', d => (isProducing ? this.width / 2 : this.radius(this.dataWeight)(d.value)))
       .attr('cx', () => this.fullWidth / 2)
       .attr('cy', () => this.fullHeight / 2);
 
-    this.recalculateAngles();
-
-    const arc = d3.arc()
-      .startAngle(d => d.startAngle)
-      .endAngle(d => d.endAngle)
-      .innerRadius(this.width / 2 - 50)
-      .outerRadius(this.width / 2 - 30);
-
-    this.outSourcesArc = this.svgD3.select('.bubbles').selectAll('.out-source')
-      .data(this.outSources, this.dataId)
-      .enter()
-      .append('path')
-      .classed('out-source', true)
-      .attr('d', arc)
-      .attr('transform', `translate(${this.width / 2}, ${this.height / 2})`)
-      .style('fill', d => d.color);
-
-    this.pack = d3.pack().size([this.fullWidth - 20, this.fullHeight - 20]);
-
-    this.circle = this.svgD3.select('.bubbles').selectAll('.in-circle')
-      .data(this.pack(this.hierarchy).descendants())
-      .enter()
-      .append('circle')
-      .classed('in-circle', true)
-      .style('fill', el => !el.parent ? 'rgba(0, 0, 0, 0)' : this.inColor)
-      .attr('cx', d => d.x)
-      .attr('cy', d => d.y)
-      .attr('r', d => d.r || 0);
+    this.redrawData();
   }
 
   redrawData() {
+    const { widgetScale = 1 } = this.props;
+    const { width: svgWidth, height: svgHeight } = this.svgDom.getBoundingClientRect();
+    const widgetSize = Math.min(svgWidth, svgHeight);
+
     this.hierarchy = d3.hierarchy(this.inData).sum(d => d.value);
 
     const isProducing = reduce(this.outData, (s, d) => s + d.value, 0) >= reduce(this.inData.children, (s, d) => s + d.value, 0);
@@ -336,22 +305,22 @@ export class Bubbles extends Component {
 
     this.pack = d3.pack().size([this.fullWidth / scale - 20, this.fullHeight / scale - 20]);
 
-    this.circle = this.svgD3.select('.bubbles').selectAll('.in-circle');
+    this.circle = this.svgD3.select('.bubbles').selectAll('.in-circle').data(this.pack(this.hierarchy).descendants());
 
-    this.circle.data(this.pack(this.hierarchy).descendants())
-      .enter()
-      .append('circle')
-      .classed('in-circle', true)
-      .style('fill', el => {
-        if (!el.parent) return 'rgba(0, 0, 0, 0)';
-        return this.inColor;
-      })
-      .transition()
-      .ease(d3.easeExpOut)
-      .duration(1000)
-      .attr('cx', d => ((d.x || 0) + (((this.fullWidth) - (this.fullWidth / scale)) / 2)))
-      .attr('cy', d => ((d.y || 0) + (((this.fullHeight) - (this.fullHeight / scale)) / 2 + margin)))
-      .attr('r', d => d.r || 0)
+    this.value = this.svgD3.select('.bubbles').selectAll('.in-value').data(this.pack(this.hierarchy).descendants());
+
+    // FIXME: wrapping text into tspan (see wrapping long labels example) leads to less controllable rows and overcomplicated renderer.
+    // Fix it later, there must be cleaner solution.
+    this.name = this.svgD3.select('.bubbles').selectAll('.in-name').data(this.pack(this.hierarchy).descendants());
+
+    ['circle', 'value', 'name'].forEach((type) => {
+      this[type].exit()
+        .transition()
+        .duration(200)
+        .attr('r', 0)
+        .style('opacity', 0)
+        .remove();
+    });
 
     this.circle
       .transition()
@@ -361,13 +330,117 @@ export class Bubbles extends Component {
       .attr('cy', d => ((d.y || 0) + (((this.fullHeight) - (this.fullHeight / scale)) / 2 + margin)))
       .attr('r', d => d.r || 0);
 
-    this.circle.data(this.pack(this.hierarchy).descendants())
-      .exit()
+    this.value
       .transition()
-      .duration(200)
-      .attr('r', 0)
-      .style('opacity', 0)
-      .remove();
+      .ease(d3.easeExpOut)
+      .duration(1000)
+      .attr('x', d => ((d.x || 0) + (((this.fullWidth) - (this.fullWidth / scale)) / 2)))
+      .attr('y', (d) => {
+        if (d.data.label !== 'consumption_common') return 0;
+        const scSize = d3.scaleLinear().domain([0, 1000]).range([0, widgetSize * widgetScale]);
+        if (scSize(d.r * 2) < 100) return ((d.y || 0) + (((this.fullHeight) - (this.fullHeight / scale)) / 2 + margin + ((d.r || 0) / 5)));
+        return ((d.y || 0) + (((this.fullHeight) - (this.fullHeight / scale)) / 2 + margin));
+      });
+
+    this.name
+      .transition()
+      .ease(d3.easeExpOut)
+      .duration(1000)
+      .attr('x', d => ((d.x || 0) + (((this.fullWidth) - (this.fullWidth / scale)) / 2)))
+      .attr('y', d => ((d.y || 0) + (((this.fullHeight) - (this.fullHeight / scale)) / 2 + margin + ((d.r || 0) / 3))));
+
+    this.circle
+      .enter()
+      .append('circle')
+      .classed('in-circle', true)
+      .style('fill', el => {
+        if (!el.parent) return 'rgba(0, 0, 0, 0)';
+        return el.data.color;
+      })
+      .transition()
+      .ease(d3.easeExpOut)
+      .duration(1000)
+      .attr('cx', d => ((d.x || 0) + (((this.fullWidth) - (this.fullWidth / scale)) / 2)))
+      .attr('cy', d => ((d.y || 0) + (((this.fullHeight) - (this.fullHeight / scale)) / 2 + margin)))
+      .attr('r', d => d.r || 0);
+
+    this.value
+      .enter()
+      .append('text')
+      .classed('in-value', true)
+      .transition()
+      .ease(d3.easeExpOut)
+      .duration(1000)
+      .attr('x', d => ((d.x || 0) + (((this.fullWidth) - (this.fullWidth / scale)) / 2)))
+      .attr('y', (d) => {
+        if (d.data.label !== 'consumption_common') return 0;
+        const scSize = d3.scaleLinear().domain([0, 1000]).range([0, widgetSize * widgetScale]);
+        if (scSize(d.r * 2) < 100) return ((d.y || 0) + (((this.fullHeight) - (this.fullHeight / scale)) / 2 + margin + ((d.r || 0) / 5)));
+        return ((d.y || 0) + (((this.fullHeight) - (this.fullHeight / scale)) / 2 + margin));
+      });
+
+    this.value.each(function(d, i) {
+      d3.select(this)
+        .selectAll('.in-text')
+        .remove();
+
+      if (d.data.label !== 'consumption_common') return;
+
+      const scSize = d3.scaleLinear().domain([0, 1000]).range([0, widgetSize * widgetScale]);
+      if (scSize(d.r * 2) < 60) return;
+
+      d3.select(this)
+        .append('tspan')
+        .classed('in-text', true)
+        .text(d => formatLabel(d.data.value).split(' ')[0])
+        .attr('text-anchor', 'middle')
+        .attr('font-size', d => d.r / 5 * 3)
+        .attr('font-family', 'Asap')
+        .attr('fill', 'rgba(255, 255, 255, 0.8)');
+
+      d3.select(this)
+        .append('tspan')
+        .classed('in-text', true)
+        .text(d => formatLabel(d.data.value).split(' ')[1])
+        .attr('text-anchor', 'middle')
+        .attr('font-size', d => d.r / 5)
+        .attr('font-family', 'Asap')
+        .attr('fill', 'rgba(255, 255, 255, 0.8)');
+    });
+
+    this.name
+      .enter()
+      .append('text')
+      .classed('in-name', true)
+      .transition()
+      .ease(d3.easeExpOut)
+      .duration(1000)
+      .attr('x', d => ((d.x || 0) + (((this.fullWidth) - (this.fullWidth / scale)) / 2)))
+      .attr('y', d => ((d.y || 0) + (((this.fullHeight) - (this.fullHeight / scale)) / 2 + margin + ((d.r || 0) / 3))));
+
+    this.name.each(function(d, i) {
+      d3.select(this)
+        .selectAll('.in-text')
+        .remove();
+
+      if (d.data.label !== 'consumption_common') return;
+
+      const scSize = d3.scaleLinear().domain([0, 1000]).range([0, widgetSize * widgetScale]);
+      if (scSize(d.r * 2) < 100) return;
+
+      d3.select(this)
+        .append('tspan')
+        .classed('in-text', true)
+        .text(d => {
+          if (!d.data.name) return '';
+          if (d.data.name.length <= 20) return d.data.name;
+          return `${d.data.name.slice(0, 17)}...`;
+        })
+        .attr('text-anchor', 'middle')
+        .attr('font-size', d => Math.min(d.r / 5, ((d.r / 5) / this.getComputedTextLength() * 150)))
+        .attr('font-family', 'Asap')
+        .attr('fill', 'rgba(255, 255, 255, 0.8)');
+    });
 
     this.outArc.transition()
       .ease(d3.easeExpOut)

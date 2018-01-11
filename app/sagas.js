@@ -14,7 +14,7 @@ export function* getGroupBubbles({ apiUrl, apiPath, token, groupId, timeout }) {
   try {
     // const registers = yield call(api.fetchGroupBubblesFake, { apiUrl, apiPath, token, groupId });
     const registers = yield call(api.fetchGroupBubbles, { apiUrl, apiPath, token, groupId, timeout, adminApp });
-    yield put(actions.setRegisters(registers));
+    if (registers._status === 200) yield put(actions.setRegisters(registers));
   } catch (error) {
     logException(error, null, errReporter);
   }

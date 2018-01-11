@@ -64,7 +64,7 @@ export default {
       timeout,
     )
       .then(camelizeResponseKeys)
-      .then(rawRes => {
+      .then((rawRes) => {
         const { body, ...res } = rawRes;
         if (res._status === 200 && body) {
           return {
@@ -74,9 +74,8 @@ export default {
               value: r.value < 0 ? 0 : r.value,
             })),
           };
-        } else {
-          return { ...res, array: [] };
         }
+        return { ...res, array: [] };
       });
   },
   // fetchGroupBubbles({ apiUrl, apiPath, token, groupId }) {

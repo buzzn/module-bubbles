@@ -84,9 +84,8 @@ export class Bubbles extends Component {
     this.drawData();
   }
 
-  componentWillReceiveProps(nextProps) {
-    const { registers } = nextProps;
-    const { registers: oldRegisters } = this.props;
+  componentDidUpdate() {
+    const { registers } = this.props;
 
     this.fillPoints(registers);
     this.redrawData();

@@ -56,7 +56,7 @@ export default {
           req(
             {
               method: 'GET',
-              url: `${apiUrl}${apiPath}/${groupId}`,
+              url: `${apiUrl}${apiPath}/${gid}`,
               headers: prepareHeaders(token),
             },
             timeout,
@@ -73,7 +73,7 @@ export default {
               req(
                 {
                   method: 'GET',
-                  url: `${apiUrl}${apiPath}/${groupId}/bubbles`,
+                  url: `${apiUrl}${apiPath}/${gid}/bubbles`,
                   headers: prepareHeaders(token),
                 },
                 timeout,

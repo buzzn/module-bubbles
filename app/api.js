@@ -84,7 +84,7 @@ export default {
                   if (res._status === 200 && body) {
                     const combined = map(JSON.parse(body), r => ({
                       ...r,
-                      id: `${groupId}-${r.id}`,
+                      id: `${gid}-${r.id}`,
                       name: groupName,
                       value: r.value < 0 ? 0 : r.value,
                     })).reduce(
@@ -97,7 +97,7 @@ export default {
                     return {
                       ...res,
                       array: combined.array.concat([
-                        { id: groupId, label: 'consumption_common', name: groupName, value: combined.consumption },
+                        { id: gid, label: 'consumption_common', name: groupName, value: combined.consumption },
                       ]),
                     };
                   }

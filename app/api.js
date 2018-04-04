@@ -65,7 +65,7 @@ export default {
             .then(rawRes => {
               const { body, ...res } = rawRes;
               if (res._status === 200 && body) {
-                JSON.parse(body).name;
+                return JSON.parse(body).name;
               }
               return '';
             })

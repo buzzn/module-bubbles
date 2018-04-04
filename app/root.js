@@ -8,7 +8,7 @@ class Root extends Component {
     const { dispatch } = this.props;
     dispatch({ type: constants.SET_API_PARAMS, apiUrl: 'http://localhost:3000', apiPath: '/api/display/groups' });
     dispatch({ type: constants.SET_TOKEN, token: 'token' });
-    dispatch({ type: constants.SET_GROUP_ID, groupId: '4c2ed124-3c27-4490-b9c7-4a33b77b9de8' });
+    dispatch({ type: constants.SET_GROUP_ID, groupId: ['1'] });
   }
 
   render() {

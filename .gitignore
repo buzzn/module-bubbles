@@ -11,6 +11,8 @@ node_modules/*
 build/*
 dist/*
 
+.vscode
+
 *.iml
 .idea/
 *.ipr

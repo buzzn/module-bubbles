@@ -6,13 +6,7 @@ import 'whatwg-fetch';
 import map from 'lodash/map';
 // import sample from 'lodash/sample';
 // const chance = require('chance').Chance();
-import {
-  req,
-  prepareHeaders,
-  parseResponse,
-  camelizeResponseKeys,
-  camelizeResponseArray,
-} from './_util';
+import { req, prepareHeaders, parseResponse, camelizeResponseKeys, camelizeResponseArray } from './_util';
 
 // function getRandomIntInclusive(min, max) {
 //   min = Math.ceil(min);
@@ -56,46 +50,92 @@ import {
 
 export default {
   fetchGroupBubbles({ apiUrl, apiPath, token, groupId, timeout, adminApp }) {
-    return req(
-      {
-        method: 'GET',
-        url: `${apiUrl}${apiPath}/${groupId}/bubbles`,
-        headers: prepareHeaders(token),
-      },
-      timeout,
-    )
-      .then(camelizeResponseKeys)
-      .then((rawRes) => {
-        const { body, ...res } = rawRes;
-        if (res._status === 200 && body) {
-          return {
-            ...res,
-            array: map(JSON.parse(body), r => ({
-              ...r,
-              value: r.value < 0 ? 0 : r.value,
-            })),
-          };
-        }
-        return { ...res, array: [] };
-      });
+    if (Array.isArray(groupId)) {
+      return Promise.all(
+        groupId.map(gid =>
+          req(
+            {
+              method: 'GET',
+              url: `${apiUrl}${apiPath}/${gid}`,
+              headers: prepareHeaders(token),
+            },
+            timeout,
+          )
+            .then(camelizeResponseKeys)
+            .then(rawRes => {
+              const { body, ...res } = rawRes;
+              if (res._status === 200 && body) {
+                return JSON.parse(body).name;
+              }
+              return '';
+            })
+            .then(groupName =>
+              req(
+                {
+                  method: 'GET',
+                  url: `${apiUrl}${apiPath}/${gid}/bubbles`,
+                  headers: prepareHeaders(token),
+                },
+                timeout,
+              )
+                .then(camelizeResponseKeys)
+                .then(rawRes => {
+                  const { body, ...res } = rawRes;
+                  if (res._status === 200 && body) {
+                    const combined = map(JSON.parse(body), r => ({
+                      ...r,
+                      id: `${gid}-${r.id}`,
+                      name: groupName,
+                      value: r.value < 0 ? 0 : r.value,
+                    })).reduce(
+                      (sum, val) =>
+                        val.label === 'consumption' || val.label === 'consumption_common'
+                          ? { ...sum, consumption: sum.consumption + val.value }
+                          : { ...sum, array: sum.array.concat([val]) },
+                      { consumption: 0, array: [] },
+                    );
+                    return {
+                      ...res,
+                      array: combined.array.concat([
+                        { id: gid, label: 'consumption_common', name: groupName, value: combined.consumption },
+                      ]),
+                    };
+                  }
+                  return { ...res, array: [] };
+                }),
+            ),
+        ),
+      ).then(resArr =>
+        resArr.reduce((sum, rawRes) => ({ ...sum, array: sum.array.concat(rawRes.array) }), {
+          _status: 200,
+          array: [],
+        }),
+      );
+    } else {
+      return req(
+        {
+          method: 'GET',
+          url: `${apiUrl}${apiPath}/${groupId}/bubbles`,
+          headers: prepareHeaders(token),
+        },
+        timeout,
+      )
+        .then(camelizeResponseKeys)
+        .then(rawRes => {
+          const { body, ...res } = rawRes;
+          if (res._status === 200 && body) {
+            return {
+              ...res,
+              array: map(JSON.parse(body), r => ({
+                ...r,
+                value: r.value < 0 ? 0 : r.value,
+              })),
+            };
+          }
+          return { ...res, array: [] };
+        });
+    }
   },
-  // fetchGroupBubbles({ apiUrl, apiPath, token, groupId }) {
-  //   return fetch(`${apiUrl}${apiPath}/${groupId}/registers`, {
-  //     headers: { ...prepareHeaders(token), 'Cache-Control': 'no-cache' },
-  //   })
-  //   .then(parseResponse)
-  //   .then(camelizeResponseKeys)
-  //   .then(registersRes => {
-  //     const registers = registersRes.array;
-  //     return fetch(`${apiUrl}${apiPath}/${groupId}/bubbles`, {
-  //       headers: { ...prepareHeaders(token), 'Cache-Control': 'no-cache' },
-  //     })
-  //     .then(parseResponse)
-  //     .then(camelizeResponseKeys)
-  //     .then(bubbles => filter(bubbles.array, b => find(registers, r => r.id === b.resourceId)).map(b => ({ ...b, id: b.resourceId, label: find(registers, r => r.id === b.resourceId).label })));
-  //   });
-  // },
-
 
   // For development
   // fetchGroupBubblesFake({ apiUrl, apiPath, token, groupId }) {

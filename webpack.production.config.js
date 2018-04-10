@@ -7,8 +7,7 @@ const StatsPlugin = require('stats-webpack-plugin');
 module.exports = {
   entry: {
     app: [
-      'babel-polyfill',
-      'bootstrap-loader',
+      '@babel/polyfill',
       'whatwg-fetch',
       './app/index.js',
     ],
@@ -25,7 +24,22 @@ module.exports = {
         exclude: /(node_modules|bower_components)/,
         loader: 'babel-loader',
         query: {
-          presets: ['es2015', 'stage-0', 'react'],
+          presets: [
+            ['@babel/env', {
+              targets: {
+                browsers: ['last 2 versions', 'safari >= 7'],
+                modules: false,
+              },
+            }],
+            '@babel/react',
+          ],
+          plugins: [
+            'react-hot-loader/babel',
+            '@babel/plugin-proposal-class-properties',
+            '@babel/plugin-proposal-object-rest-spread',
+            '@babel/plugin-syntax-object-rest-spread',
+            '@babel/plugin-syntax-class-properties'
+          ],
         },
       },
       {
@@ -41,8 +55,8 @@ module.exports = {
         use: [
           'style-loader',
           'css-loader',
-          'postcss-loader',
           'sass-loader',
+          'postcss-loader',
         ],
       },
       {
@@ -81,18 +95,6 @@ module.exports = {
     new HtmlWebpackPlugin({
       template: 'app/index.html',
       filename: '../index.html',
-    }),
-    // TODO: fix it after #265
-    new ExtractTextPlugin({ filename: 'bundle-[hash].min.css', allChunks: true }),
-    new webpack.optimize.UglifyJsPlugin({
-      comments: false,
-      sourceMap: false,
-      compress: {
-        warnings: false,
-        screw_ie8: true,
-        unused: true,
-        dead_code: true,
-      },
     }),
     new StatsPlugin('webpack.stats.json', {
       source: false,

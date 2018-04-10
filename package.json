@@ -6,10 +6,11 @@
   "scripts": {
     "test": "jest --coverage",
     "dev-server": "webpack-dev-server --mode development --progress --inline --hot --port=2999",
-    "build": "NODE_ENV=production rimraf build && webpack --config ./webpack.production.config.js --progress --profile --colors",
+    "build": "rimraf build && webpack --config ./webpack.production.config.js --progress --profile --colors",
+    "compat": "npx babel app/ -d dist/",
     "add-dist": "git add ."
   },
-  "pre-commit": ["build", "add-dist"],
+  "pre-commit": ["compat", "add-dist"],
   "keywords": [],
   "author": "",
   "license": "ISC",

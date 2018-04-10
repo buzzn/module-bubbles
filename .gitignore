@@ -11,6 +11,8 @@ coverage/*
 
 .vscode
 
+build/*
+
 *.iml
 .idea/
 *.ipr

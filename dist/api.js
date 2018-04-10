@@ -33,28 +33,97 @@ var _default = {
         groupId = _ref.groupId,
         timeout = _ref.timeout,
         adminApp = _ref.adminApp;
-    return (0, _util.req)({
-      method: 'GET',
-      url: "".concat(apiUrl).concat(apiPath, "/").concat(groupId, "/bubbles"),
-      headers: (0, _util.prepareHeaders)(token)
-    }, timeout).then(_util.camelizeResponseKeys).then(function (rawRes) {
-      var body = rawRes.body,
-          res = _objectWithoutProperties(rawRes, ["body"]);
 
-      if (res._status === 200 && body) {
-        return _objectSpread({}, res, {
-          array: (0, _map.default)(JSON.parse(body), function (r) {
-            return _objectSpread({}, r, {
-              value: r.value < 0 ? 0 : r.value
+    if (Array.isArray(groupId)) {
+      return Promise.all(groupId.map(function (gid) {
+        return (0, _util.req)({
+          method: 'GET',
+          url: "".concat(apiUrl).concat(apiPath, "/").concat(gid),
+          headers: (0, _util.prepareHeaders)(token)
+        }, timeout).then(_util.camelizeResponseKeys).then(function (rawRes) {
+          var body = rawRes.body,
+              res = _objectWithoutProperties(rawRes, ["body"]);
+
+          if (res._status === 200 && body) {
+            return JSON.parse(body).name;
+          }
+
+          return '';
+        }).then(function (groupName) {
+          return (0, _util.req)({
+            method: 'GET',
+            url: "".concat(apiUrl).concat(apiPath, "/").concat(gid, "/bubbles"),
+            headers: (0, _util.prepareHeaders)(token)
+          }, timeout).then(_util.camelizeResponseKeys).then(function (rawRes) {
+            var body = rawRes.body,
+                res = _objectWithoutProperties(rawRes, ["body"]);
+
+            if (res._status === 200 && body) {
+              var combined = (0, _map.default)(JSON.parse(body), function (r) {
+                return _objectSpread({}, r, {
+                  id: "".concat(gid, "-").concat(r.id),
+                  name: groupName,
+                  value: r.value < 0 ? 0 : r.value
+                });
+              }).reduce(function (sum, val) {
+                return val.label === 'consumption' || val.label === 'consumption_common' ? _objectSpread({}, sum, {
+                  consumption: sum.consumption + val.value
+                }) : _objectSpread({}, sum, {
+                  array: sum.array.concat([val])
+                });
+              }, {
+                consumption: 0,
+                array: []
+              });
+              return _objectSpread({}, res, {
+                array: combined.array.concat([{
+                  id: gid,
+                  label: 'consumption_common',
+                  name: groupName,
+                  value: combined.consumption
+                }])
+              });
+            }
+
+            return _objectSpread({}, res, {
+              array: []
             });
-          })
+          });
         });
-      }
-
-      return _objectSpread({}, res, {
-        array: []
+      })).then(function (resArr) {
+        return resArr.reduce(function (sum, rawRes) {
+          return _objectSpread({}, sum, {
+            array: sum.array.concat(rawRes.array)
+          });
+        }, {
+          _status: 200,
+          array: []
+        });
       });
-    });
+    } else {
+      return (0, _util.req)({
+        method: 'GET',
+        url: "".concat(apiUrl).concat(apiPath, "/").concat(groupId, "/bubbles"),
+        headers: (0, _util.prepareHeaders)(token)
+      }, timeout).then(_util.camelizeResponseKeys).then(function (rawRes) {
+        var body = rawRes.body,
+            res = _objectWithoutProperties(rawRes, ["body"]);
+
+        if (res._status === 200 && body) {
+          return _objectSpread({}, res, {
+            array: (0, _map.default)(JSON.parse(body), function (r) {
+              return _objectSpread({}, r, {
+                value: r.value < 0 ? 0 : r.value
+              });
+            })
+          });
+        }
+
+        return _objectSpread({}, res, {
+          array: []
+        });
+      });
+    }
   }
 };
 // function getRandomIntInclusive(min, max) {

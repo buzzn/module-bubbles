@@ -63,7 +63,7 @@ function (_Component) {
       });
       dispatch({
         type: _actions.constants.SET_GROUP_ID,
-        groupId: '1'
+        groupId: ['1']
       });
     }
   }, {

@@ -441,7 +441,7 @@ export class Bubbles extends Component {
         .text(d => formatLabel(d.data.value).split(' ')[0])
         .attr('text-anchor', 'middle')
         .attr('font-size', d => d.r / 5 * 3)
-        .attr('font-family', 'Asap')
+        .attr('font-family', 'Source Sans Pro')
         .attr('fill', 'rgba(255, 255, 255, 0.8)');
 
       d3
@@ -451,7 +451,7 @@ export class Bubbles extends Component {
         .text(d => formatLabel(d.data.value).split(' ')[1])
         .attr('text-anchor', 'middle')
         .attr('font-size', d => d.r / 5)
-        .attr('font-family', 'Asap')
+        .attr('font-family', 'Source Sans Pro')
         .attr('fill', 'rgba(255, 255, 255, 0.8)');
     });
 
@@ -490,7 +490,7 @@ export class Bubbles extends Component {
         })
         .attr('text-anchor', 'middle')
         .attr('font-size', d => Math.min(d.r / 5, d.r / 5 / this.getComputedTextLength() * 150))
-        .attr('font-family', 'Asap')
+        .attr('font-family', 'Source Sans Pro')
         .attr('fill', 'rgba(255, 255, 255, 0.8)');
     });
 

@@ -446,12 +446,12 @@ function (_Component) {
           return (0, _util.formatLabel)(d.data.value).split(' ')[0];
         }).attr('text-anchor', 'middle').attr('font-size', function (d) {
           return d.r / 5 * 3;
-        }).attr('font-family', 'Asap').attr('fill', 'rgba(255, 255, 255, 0.8)');
+        }).attr('font-family', 'Source Sans Pro').attr('fill', 'rgba(255, 255, 255, 0.8)');
         d3.select(this).append('tspan').classed('in-text', true).text(function (d) {
           return (0, _util.formatLabel)(d.data.value).split(' ')[1];
         }).attr('text-anchor', 'middle').attr('font-size', function (d) {
           return d.r / 5;
-        }).attr('font-family', 'Asap').attr('fill', 'rgba(255, 255, 255, 0.8)');
+        }).attr('font-family', 'Source Sans Pro').attr('fill', 'rgba(255, 255, 255, 0.8)');
       });
       this.name.enter().append('text').classed('in-name', true).transition().ease(d3.easeExpOut).duration(1000).attr('x', function (d) {
         return (d.x || 0) + (_this6.fullWidth - _this6.fullWidth / scale) / 2;
@@ -471,7 +471,7 @@ function (_Component) {
           return "".concat(d.data.name.slice(0, 17), "...");
         }).attr('text-anchor', 'middle').attr('font-size', function (d) {
           return Math.min(d.r / 5, d.r / 5 / _this7.getComputedTextLength() * 150);
-        }).attr('font-family', 'Asap').attr('fill', 'rgba(255, 255, 255, 0.8)');
+        }).attr('font-family', 'Source Sans Pro').attr('fill', 'rgba(255, 255, 255, 0.8)');
       });
       this.outArc.transition().ease(d3.easeExpOut).duration(1000).style('opacity', isProducing ? 1 : 0);
       this.outCircle.data(this.outCombined(), this.dataId).transition().ease(d3.easeExpOut).duration(1000).style('opacity', isProducing ? 0 : 1).attr('r', function (d) {

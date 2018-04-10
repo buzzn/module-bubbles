@@ -297,18 +297,22 @@ function (_Component) {
       var _this5 = this;
 
       this.svgD3.append('g').classed('bubbles', true);
-      this.clock = this.svgD3.append('g').classed('clock', true);
-      this.clock.append('text').text('').classed('clock-left', true).attr('x', '180').attr('y', '580').style('font-size', '260px').style('font-family', 'Asap, Helvetica').style('fill', 'rgba(74, 74, 74, 0.5)');
-      this.clock.append('text').text('').classed('clock-right', true).attr('x', '520').attr('y', '580').style('font-size', '260px').style('font-family', 'Asap, Helvetica').style('fill', 'rgba(74, 74, 74, 0.5)');
-      this.updateClock = setInterval(function () {
-        var now = new Date();
 
-        _this5.clock.select('.clock-left').text("0".concat(now.getHours()).slice(-2) + (_this5.ticker ? ':' : ' '));
+      if (this.props.showClock) {
+        this.clock = this.svgD3.append('g').classed('clock', true);
+        this.clock.append('text').text('').classed('clock-left', true).attr('x', '180').attr('y', '580').style('font-size', '260px').style('font-family', 'Source Sans Pro, Helvetica').style('fill', 'rgba(74, 74, 74, 0.5)');
+        this.clock.append('text').text('').classed('clock-right', true).attr('x', '520').attr('y', '580').style('font-size', '260px').style('font-family', 'Source Sans Pro, Helvetica').style('fill', 'rgba(74, 74, 74, 0.5)');
+        this.updateClock = setInterval(function () {
+          var now = new Date();
 
-        _this5.clock.select('.clock-right').text("0".concat(now.getMinutes()).slice(-2));
+          _this5.clock.select('.clock-left').text("0".concat(now.getHours()).slice(-2) + (_this5.ticker ? ':' : ' '));
 
-        _this5.ticker = !_this5.ticker;
-      }, 1000);
+          _this5.clock.select('.clock-right').text("0".concat(now.getMinutes()).slice(-2));
+
+          _this5.ticker = !_this5.ticker;
+        }, 1000);
+      }
+
       var isProducing = (0, _reduce.default)(this.outData, function (s, d) {
         return s + d.value;
       }, 0) >= (0, _reduce.default)(this.inData.children, function (s, d) {

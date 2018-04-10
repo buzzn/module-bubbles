@@ -6,7 +6,7 @@ import reduce from 'lodash/reduce';
 import map from 'lodash/map';
 import find from 'lodash/find';
 import findIndex from 'lodash/findIndex';
-import { formatLabel } from "../_util";
+import { formatLabel } from '../_util';
 
 const d3 = require('d3');
 
@@ -67,9 +67,13 @@ export class Bubbles extends Component {
   render() {
     return (
       <div style={{ width: '100%', height: '100%' }}>
-        <svg ref={ svgDom => this.svgDom = svgDom } width="100%" height="100%" viewBox="0 0 1000 1000">
+        <svg ref={svgDom => (this.svgDom = svgDom)} width="100%" height="100%" viewBox="0 0 1000 1000">
           <circle className="bg-circle" r="480" cx="500" cy="500" style={{ fill: '#efefef' }} />
-          <path transform="translate(300,300)" d="M73.873,423.753c-2,0 -4,-0.8 -5.2,-2c-2.8,-2.8 -3.6,-6.8 -1.6,-10.4l108.4,-171.6l-117.6,0c-3.6,0 -6.4,-2 -7.6,-5.2c-1.2,-3.2 0,-6.8 2.8,-8.8l284,-224c3.2,-2.4 7.6,-2.4 10.4,0.4c2.8,2.8 3.6,6.8 1.2,10.4l-105.6,163.2l122.8,0c3.6,0 6.4,2 7.6,5.2c1.2,3.2 0,6.8 -2.4,8.8l-292,232c-1.6,1.6 -3.6,2 -5.2,2Z" style={{ fill: '#fff', fillRule: 'nonzero' }}/>
+          <path
+            transform="translate(300,300)"
+            d="M73.873,423.753c-2,0 -4,-0.8 -5.2,-2c-2.8,-2.8 -3.6,-6.8 -1.6,-10.4l108.4,-171.6l-117.6,0c-3.6,0 -6.4,-2 -7.6,-5.2c-1.2,-3.2 0,-6.8 2.8,-8.8l284,-224c3.2,-2.4 7.6,-2.4 10.4,0.4c2.8,2.8 3.6,6.8 1.2,10.4l-105.6,163.2l122.8,0c3.6,0 6.4,2 7.6,5.2c1.2,3.2 0,6.8 -2.4,8.8l-292,232c-1.6,1.6 -3.6,2 -5.2,2Z"
+            style={{ fill: '#fff', fillRule: 'nonzero' }}
+          />
         </svg>
       </div>
     );
@@ -103,7 +107,7 @@ export class Bubbles extends Component {
     this.inData.children = filter(this.inData.children, oldP => find(pointsArr, p => oldP.id === p.id));
     this.outData = filter(this.outData, oldP => find(pointsArr, p => oldP.id === p.id));
 
-    const generatePoint = (point) => ({
+    const generatePoint = point => ({
       c: point.c,
       id: point.id,
       value: point.value,
@@ -112,7 +116,7 @@ export class Bubbles extends Component {
       color: this.colors[point.label.toLowerCase()],
     });
 
-    forEach(pointsArr, (point) => {
+    forEach(pointsArr, point => {
       const label = point.label.toLowerCase();
       if (label === 'consumption' || label === 'consumption_common') {
         const idx = findIndex(this.inData.children, p => p.id === point.id);
@@ -121,7 +125,12 @@ export class Bubbles extends Component {
         } else {
           this.inData.children[idx].value = point.value;
         }
-      } else if (label === 'production_pv' || label === 'production_chp' || label === 'production_water' || label === 'production_wind') {
+      } else if (
+        label === 'production_pv' ||
+        label === 'production_chp' ||
+        label === 'production_water' ||
+        label === 'production_wind'
+      ) {
         const idx = findIndex(this.outData, p => p.id === point.id);
         if (idx === -1) {
           this.outData.push(generatePoint(point));
@@ -148,23 +157,26 @@ export class Bubbles extends Component {
 
   radius(weight) {
     const zoom = this.width / 3;
-    return d3.scalePow()
+    return d3
+      .scalePow()
       .exponent(0.5)
       .domain([0, weight()])
       .range([2, zoom]);
   }
 
   outCombined() {
-    return [{
-      id: 'outBubble',
-      value: reduce(this.outData, (s, d) => s + d.value, 0),
-    }];
+    return [
+      {
+        id: 'outBubble',
+        value: reduce(this.outData, (s, d) => s + d.value, 0),
+      },
+    ];
   }
 
   recalculateAngles() {
     const totalPower = reduce(this.outData, (s, d) => s + d.value, 0);
     const sources = {};
-    forEach(this.outData, (d) => {
+    forEach(this.outData, d => {
       if (!sources[d.label]) sources[d.label] = { color: this.colors[d.label] || this.colors['out'], value: 0 };
       sources[d.label].value += d.value;
     });
@@ -173,7 +185,7 @@ export class Bubbles extends Component {
     let startAngle = 0;
     forEach(outSources, (data, idx) => {
       if (data.value === 0) return;
-      let endAngle = (data.value / totalPower * 2 * Math.PI + startAngle) || 0;
+      let endAngle = data.value / totalPower * 2 * Math.PI + startAngle || 0;
       outSources[idx].startAngle = startAngle;
       outSources[idx].endAngle = endAngle;
       startAngle = endAngle;
@@ -189,36 +201,42 @@ export class Bubbles extends Component {
   drawData() {
     this.svgD3.append('g').classed('bubbles', true);
 
-    this.clock = this.svgD3.append('g').classed('clock', true);
+    if (this.props.showClock) {
+      this.clock = this.svgD3.append('g').classed('clock', true);
 
-    this.clock.append('text')
-      .text('')
-      .classed('clock-left', true)
-      .attr('x', '180')
-      .attr('y', '580')
-      .style('font-size', '260px')
-      .style('font-family', 'Asap, Helvetica')
-      .style('fill', 'rgba(74, 74, 74, 0.5)');
+      this.clock
+        .append('text')
+        .text('')
+        .classed('clock-left', true)
+        .attr('x', '180')
+        .attr('y', '580')
+        .style('font-size', '260px')
+        .style('font-family', 'Source Sans Pro, Helvetica')
+        .style('fill', 'rgba(74, 74, 74, 0.5)');
 
-    this.clock.append('text')
-      .text('')
-      .classed('clock-right', true)
-      .attr('x', '520')
-      .attr('y', '580')
-      .style('font-size', '260px')
-      .style('font-family', 'Asap, Helvetica')
-      .style('fill', 'rgba(74, 74, 74, 0.5)');
+      this.clock
+        .append('text')
+        .text('')
+        .classed('clock-right', true)
+        .attr('x', '520')
+        .attr('y', '580')
+        .style('font-size', '260px')
+        .style('font-family', 'Source Sans Pro, Helvetica')
+        .style('fill', 'rgba(74, 74, 74, 0.5)');
 
-    this.updateClock = setInterval(() => {
-      const now = new Date();
-      this.clock.select('.clock-left').text((`0${now.getHours()}`).slice(-2) + (this.ticker ? ':' : ' '));
-      this.clock.select('.clock-right').text((`0${now.getMinutes()}`).slice(-2));
-      this.ticker = !this.ticker;
-    }, 1000);
+      this.updateClock = setInterval(() => {
+        const now = new Date();
+        this.clock.select('.clock-left').text(`0${now.getHours()}`.slice(-2) + (this.ticker ? ':' : ' '));
+        this.clock.select('.clock-right').text(`0${now.getMinutes()}`.slice(-2));
+        this.ticker = !this.ticker;
+      }, 1000);
+    }
 
-    const isProducing = reduce(this.outData, (s, d) => s + d.value, 0) >= reduce(this.inData.children, (s, d) => s + d.value, 0);
+    const isProducing =
+      reduce(this.outData, (s, d) => s + d.value, 0) >= reduce(this.inData.children, (s, d) => s + d.value, 0);
 
-    this.outArc = this.svgD3.select('.bubbles')
+    this.outArc = this.svgD3
+      .select('.bubbles')
       .append('circle')
       .classed('out-arc', true)
       .style('fill', 'rgba(0, 0, 0, 0)')
@@ -228,7 +246,9 @@ export class Bubbles extends Component {
       .attr('cx', () => this.fullWidth / 2)
       .attr('cy', () => this.fullHeight / 2);
 
-    this.outCircle = this.svgD3.select('.bubbles').selectAll('.out-circle')
+    this.outCircle = this.svgD3
+      .select('.bubbles')
+      .selectAll('.out-circle')
       .data(this.outCombined(), this.dataId)
       .enter()
       .append('circle')
@@ -248,7 +268,8 @@ export class Bubbles extends Component {
 
     this.hierarchy = d3.hierarchy(this.inData).sum(d => d.value);
 
-    const isProducing = reduce(this.outData, (s, d) => s + d.value, 0) >= reduce(this.inData.children, (s, d) => s + d.value, 0);
+    const isProducing =
+      reduce(this.outData, (s, d) => s + d.value, 0) >= reduce(this.inData.children, (s, d) => s + d.value, 0);
     let scale = reduce(this.outData, (s, d) => s + d.value, 0) / reduce(this.inData.children, (s, d) => s + d.value, 0);
     let margin = 0;
     if (scale <= 1.5) {
@@ -263,7 +284,8 @@ export class Bubbles extends Component {
 
     this.recalculateAngles();
 
-    const arc = d3.arc()
+    const arc = d3
+      .arc()
       .startAngle(d => d.startAngle)
       .endAngle(d => d.endAngle)
       .innerRadius(this.width / 2 - 50)
@@ -271,7 +293,8 @@ export class Bubbles extends Component {
 
     this.outSourcesArc = this.svgD3.select('.bubbles').selectAll('.out-source');
 
-    this.outSourcesArc.data(this.outSources, this.dataId)
+    this.outSourcesArc
+      .data(this.outSources, this.dataId)
       .enter()
       .append('path')
       .classed('out-source', true)
@@ -289,13 +312,14 @@ export class Bubbles extends Component {
       .ease(d3.easeExpOut)
       .duration(1000)
       .style('opacity', isProducing ? 1 : 0)
-      .attrTween('d', function (d) {
+      .attrTween('d', function(d) {
         const i = d3.interpolate(d.old, d);
         d.old = i(0);
-        return (t) => arc(i(t));
+        return t => arc(i(t));
       });
 
-    this.outSourcesArc.data(this.outSources, this.dataId)
+    this.outSourcesArc
+      .data(this.outSources, this.dataId)
       .exit()
       .transition()
       .duration(200)
@@ -304,16 +328,26 @@ export class Bubbles extends Component {
 
     this.pack = d3.pack().size([this.fullWidth / scale - 20, this.fullHeight / scale - 20]);
 
-    this.circle = this.svgD3.select('.bubbles').selectAll('.in-circle').data(this.pack(this.hierarchy).descendants());
+    this.circle = this.svgD3
+      .select('.bubbles')
+      .selectAll('.in-circle')
+      .data(this.pack(this.hierarchy).descendants());
 
-    this.value = this.svgD3.select('.bubbles').selectAll('.in-value').data(this.pack(this.hierarchy).descendants());
+    this.value = this.svgD3
+      .select('.bubbles')
+      .selectAll('.in-value')
+      .data(this.pack(this.hierarchy).descendants());
 
     // FIXME: wrapping text into tspan (see wrapping long labels example) leads to less controllable rows and overcomplicated renderer.
     // Fix it later, there must be cleaner solution.
-    this.name = this.svgD3.select('.bubbles').selectAll('.in-name').data(this.pack(this.hierarchy).descendants());
+    this.name = this.svgD3
+      .select('.bubbles')
+      .selectAll('.in-name')
+      .data(this.pack(this.hierarchy).descendants());
 
-    ['circle', 'value', 'name'].forEach((type) => {
-      this[type].exit()
+    ['circle', 'value', 'name'].forEach(type => {
+      this[type]
+        .exit()
         .transition()
         .duration(200)
         .attr('r', 0)
@@ -325,28 +359,32 @@ export class Bubbles extends Component {
       .transition()
       .ease(d3.easeExpOut)
       .duration(1000)
-      .attr('cx', d => ((d.x || 0) + (((this.fullWidth) - (this.fullWidth / scale)) / 2)))
-      .attr('cy', d => ((d.y || 0) + (((this.fullHeight) - (this.fullHeight / scale)) / 2 + margin)))
+      .attr('cx', d => (d.x || 0) + (this.fullWidth - this.fullWidth / scale) / 2)
+      .attr('cy', d => (d.y || 0) + ((this.fullHeight - this.fullHeight / scale) / 2 + margin))
       .attr('r', d => d.r || 0);
 
     this.value
       .transition()
       .ease(d3.easeExpOut)
       .duration(1000)
-      .attr('x', d => ((d.x || 0) + (((this.fullWidth) - (this.fullWidth / scale)) / 2)))
-      .attr('y', (d) => {
+      .attr('x', d => (d.x || 0) + (this.fullWidth - this.fullWidth / scale) / 2)
+      .attr('y', d => {
         if (d.data.label !== 'consumption_common') return 0;
-        const scSize = d3.scaleLinear().domain([0, 1000]).range([0, widgetSize * widgetScale]);
-        if (scSize(d.r * 2) < 100) return ((d.y || 0) + (((this.fullHeight) - (this.fullHeight / scale)) / 2 + margin + ((d.r || 0) / 5)));
-        return ((d.y || 0) + (((this.fullHeight) - (this.fullHeight / scale)) / 2 + margin));
+        const scSize = d3
+          .scaleLinear()
+          .domain([0, 1000])
+          .range([0, widgetSize * widgetScale]);
+        if (scSize(d.r * 2) < 100)
+          return (d.y || 0) + ((this.fullHeight - this.fullHeight / scale) / 2 + margin + (d.r || 0) / 5);
+        return (d.y || 0) + ((this.fullHeight - this.fullHeight / scale) / 2 + margin);
       });
 
     this.name
       .transition()
       .ease(d3.easeExpOut)
       .duration(1000)
-      .attr('x', d => ((d.x || 0) + (((this.fullWidth) - (this.fullWidth / scale)) / 2)))
-      .attr('y', d => ((d.y || 0) + (((this.fullHeight) - (this.fullHeight / scale)) / 2 + margin + ((d.r || 0) / 3))));
+      .attr('x', d => (d.x || 0) + (this.fullWidth - this.fullWidth / scale) / 2)
+      .attr('y', d => (d.y || 0) + ((this.fullHeight - this.fullHeight / scale) / 2 + margin + (d.r || 0) / 3));
 
     this.circle
       .enter()
@@ -359,8 +397,8 @@ export class Bubbles extends Component {
       .transition()
       .ease(d3.easeExpOut)
       .duration(1000)
-      .attr('cx', d => ((d.x || 0) + (((this.fullWidth) - (this.fullWidth / scale)) / 2)))
-      .attr('cy', d => ((d.y || 0) + (((this.fullHeight) - (this.fullHeight / scale)) / 2 + margin)))
+      .attr('cx', d => (d.x || 0) + (this.fullWidth - this.fullWidth / scale) / 2)
+      .attr('cy', d => (d.y || 0) + ((this.fullHeight - this.fullHeight / scale) / 2 + margin))
       .attr('r', d => d.r || 0);
 
     this.value
@@ -370,25 +408,34 @@ export class Bubbles extends Component {
       .transition()
       .ease(d3.easeExpOut)
       .duration(1000)
-      .attr('x', d => ((d.x || 0) + (((this.fullWidth) - (this.fullWidth / scale)) / 2)))
-      .attr('y', (d) => {
+      .attr('x', d => (d.x || 0) + (this.fullWidth - this.fullWidth / scale) / 2)
+      .attr('y', d => {
         if (d.data.label !== 'consumption_common') return 0;
-        const scSize = d3.scaleLinear().domain([0, 1000]).range([0, widgetSize * widgetScale]);
-        if (scSize(d.r * 2) < 100) return ((d.y || 0) + (((this.fullHeight) - (this.fullHeight / scale)) / 2 + margin + ((d.r || 0) / 5)));
-        return ((d.y || 0) + (((this.fullHeight) - (this.fullHeight / scale)) / 2 + margin));
+        const scSize = d3
+          .scaleLinear()
+          .domain([0, 1000])
+          .range([0, widgetSize * widgetScale]);
+        if (scSize(d.r * 2) < 100)
+          return (d.y || 0) + ((this.fullHeight - this.fullHeight / scale) / 2 + margin + (d.r || 0) / 5);
+        return (d.y || 0) + ((this.fullHeight - this.fullHeight / scale) / 2 + margin);
       });
 
     this.value.each(function(d, i) {
-      d3.select(this)
+      d3
+        .select(this)
         .selectAll('.in-text')
         .remove();
 
       if (d.data.label !== 'consumption_common') return;
 
-      const scSize = d3.scaleLinear().domain([0, 1000]).range([0, widgetSize * widgetScale]);
+      const scSize = d3
+        .scaleLinear()
+        .domain([0, 1000])
+        .range([0, widgetSize * widgetScale]);
       if (scSize(d.r * 2) < 60) return;
 
-      d3.select(this)
+      d3
+        .select(this)
         .append('tspan')
         .classed('in-text', true)
         .text(d => formatLabel(d.data.value).split(' ')[0])
@@ -397,7 +444,8 @@ export class Bubbles extends Component {
         .attr('font-family', 'Asap')
         .attr('fill', 'rgba(255, 255, 255, 0.8)');
 
-      d3.select(this)
+      d3
+        .select(this)
         .append('tspan')
         .classed('in-text', true)
         .text(d => formatLabel(d.data.value).split(' ')[1])
@@ -414,20 +462,25 @@ export class Bubbles extends Component {
       .transition()
       .ease(d3.easeExpOut)
       .duration(1000)
-      .attr('x', d => ((d.x || 0) + (((this.fullWidth) - (this.fullWidth / scale)) / 2)))
-      .attr('y', d => ((d.y || 0) + (((this.fullHeight) - (this.fullHeight / scale)) / 2 + margin + ((d.r || 0) / 3))));
+      .attr('x', d => (d.x || 0) + (this.fullWidth - this.fullWidth / scale) / 2)
+      .attr('y', d => (d.y || 0) + ((this.fullHeight - this.fullHeight / scale) / 2 + margin + (d.r || 0) / 3));
 
     this.name.each(function(d, i) {
-      d3.select(this)
+      d3
+        .select(this)
         .selectAll('.in-text')
         .remove();
 
       if (d.data.label !== 'consumption_common') return;
 
-      const scSize = d3.scaleLinear().domain([0, 1000]).range([0, widgetSize * widgetScale]);
+      const scSize = d3
+        .scaleLinear()
+        .domain([0, 1000])
+        .range([0, widgetSize * widgetScale]);
       if (scSize(d.r * 2) < 100) return;
 
-      d3.select(this)
+      d3
+        .select(this)
         .append('tspan')
         .classed('in-text', true)
         .text(d => {
@@ -436,28 +489,31 @@ export class Bubbles extends Component {
           return `${d.data.name.slice(0, 17)}...`;
         })
         .attr('text-anchor', 'middle')
-        .attr('font-size', d => Math.min(d.r / 5, ((d.r / 5) / this.getComputedTextLength() * 150)))
+        .attr('font-size', d => Math.min(d.r / 5, d.r / 5 / this.getComputedTextLength() * 150))
         .attr('font-family', 'Asap')
         .attr('fill', 'rgba(255, 255, 255, 0.8)');
     });
 
-    this.outArc.transition()
+    this.outArc
+      .transition()
       .ease(d3.easeExpOut)
       .duration(1000)
       .style('opacity', isProducing ? 1 : 0);
 
-    this.outCircle.data(this.outCombined(), this.dataId)
+    this.outCircle
+      .data(this.outCombined(), this.dataId)
       .transition()
       .ease(d3.easeExpOut)
       .duration(1000)
       .style('opacity', isProducing ? 0 : 1)
       .attr('r', d => (isProducing ? this.width / 2 : this.radius(this.dataWeight)(d.value)));
 
-    this.svgD3.select('.bg-circle')
+    this.svgD3
+      .select('.bg-circle')
       .transition()
       .ease(d3.easeExpOut)
       .duration(1000)
-      .style('opacity', isProducing ? 1 : 0)
+      .style('opacity', isProducing ? 1 : 0);
   }
 
   componentWillUnmount() {

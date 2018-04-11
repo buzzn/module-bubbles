@@ -219,6 +219,7 @@ function (_Component) {
             _this3.inData.children.push(generatePoint(point));
           } else {
             _this3.inData.children[idx].value = point.value;
+            _this3.inData.children[idx].color = _this3.colors[label];
           }
         } else if (label === 'production_pv' || label === 'production_chp' || label === 'production_water' || label === 'production_wind') {
           var _idx = (0, _findIndex.default)(_this3.outData, function (p) {
@@ -229,6 +230,7 @@ function (_Component) {
             _this3.outData.push(generatePoint(point));
           } else {
             _this3.outData[_idx].value = point.value;
+            _this3.outData[_idx].color = _this3.colors[label];
           }
         }
       });

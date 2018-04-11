@@ -140,6 +140,7 @@ export class Bubbles extends Component {
           this.inData.children.push(generatePoint(point));
         } else {
           this.inData.children[idx].value = point.value;
+          this.inData.children[idx].color = this.colors[label];
         }
       } else if (
         label === 'production_pv' ||
@@ -152,6 +153,7 @@ export class Bubbles extends Component {
           this.outData.push(generatePoint(point));
         } else {
           this.outData[idx].value = point.value;
+          this.outData[idx].color = this.colors[label];
         }
       }
     });

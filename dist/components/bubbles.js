@@ -420,7 +420,10 @@ function (_Component) {
       ['circle', 'value', 'name'].forEach(function (type) {
         _this6[type].exit().transition().duration(200).attr('r', 0).style('opacity', 0).remove();
       });
-      this.circle.transition().ease(d3.easeExpOut).duration(1000).attr('cx', function (d) {
+      this.circle.transition().ease(d3.easeExpOut).duration(1000).style('fill', function (el) {
+        if (!el.parent) return 'rgba(0, 0, 0, 0)';
+        return el.data.color;
+      }).attr('cx', function (d) {
         return (d.x || 0) + (_this6.fullWidth - _this6.fullWidth / scale) / 2;
       }).attr('cy', function (d) {
         return (d.y || 0) + ((_this6.fullHeight - _this6.fullHeight / scale) / 2 + margin);

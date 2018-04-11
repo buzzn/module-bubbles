@@ -377,6 +377,10 @@ export class Bubbles extends Component {
       .transition()
       .ease(d3.easeExpOut)
       .duration(1000)
+      .style('fill', el => {
+        if (!el.parent) return 'rgba(0, 0, 0, 0)';
+        return el.data.color;
+      })
       .attr('cx', d => (d.x || 0) + (this.fullWidth - this.fullWidth / scale) / 2)
       .attr('cy', d => (d.y || 0) + ((this.fullHeight - this.fullHeight / scale) / 2 + margin))
       .attr('r', d => d.r || 0);

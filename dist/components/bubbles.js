@@ -69,7 +69,16 @@ function (_Component) {
       children: []
     };
     _this.outData = [];
-    _this.colors = {
+    _this.dayColors = {
+      consumption: 'rgba(158, 242, 234, 0.8)',
+      consumption_common: 'rgba(70, 202, 218, 0.8)',
+      out: '#E4F157',
+      production_pv: '#fffb4b',
+      production_chp: '#ffc746',
+      production_water: '#3ea8f5',
+      production_wind: '#a0daf9'
+    };
+    _this.nightColors = {
       consumption: 'rgba(128, 222, 234, 0.8)',
       consumption_common: 'rgba(70, 202, 218, 0.8)',
       out: '#D4E157',
@@ -78,6 +87,7 @@ function (_Component) {
       production_water: '#1e88e5',
       production_wind: '#90caf9'
     };
+    _this.colors = props.day ? _this.dayColors : _this.nightColors;
     _this.fullWidth = null;
     _this.width = null;
     _this.fullHeight = null;
@@ -148,7 +158,16 @@ function (_Component) {
   }, {
     key: "componentDidUpdate",
     value: function componentDidUpdate() {
-      var registers = this.props.registers;
+      var _props = this.props,
+          registers = _props.registers,
+          day = _props.day;
+
+      if (day) {
+        this.colors = this.dayColors;
+      } else {
+        this.colors = this.nightColors;
+      }
+
       this.fillPoints(registers);
       this.redrawData();
     }
@@ -473,8 +492,8 @@ function (_Component) {
           return Math.min(d.r / 5, d.r / 5 / _this7.getComputedTextLength() * 150);
         }).attr('font-family', 'Source Sans Pro').attr('fill', 'rgba(255, 255, 255, 0.8)');
       });
-      this.outArc.transition().ease(d3.easeExpOut).duration(1000).style('opacity', isProducing ? 1 : 0);
-      this.outCircle.data(this.outCombined(), this.dataId).transition().ease(d3.easeExpOut).duration(1000).style('opacity', isProducing ? 0 : 1).attr('r', function (d) {
+      this.outArc.transition().ease(d3.easeExpOut).duration(1000).style('stroke', this.colors['out']).style('opacity', isProducing ? 1 : 0);
+      this.outCircle.data(this.outCombined(), this.dataId).transition().ease(d3.easeExpOut).duration(1000).style('fill', this.colors['out']).style('opacity', isProducing ? 0 : 1).attr('r', function (d) {
         return isProducing ? _this6.width / 2 : _this6.radius(_this6.dataWeight)(d.value);
       });
       this.svgD3.select('.bg-circle').transition().ease(d3.easeExpOut).duration(1000).style('opacity', isProducing ? 1 : 0);

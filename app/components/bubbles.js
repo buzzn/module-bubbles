@@ -20,7 +20,16 @@ export class Bubbles extends Component {
 
     this.inData = { name: 'in', children: [] };
     this.outData = [];
-    this.colors = {
+    this.dayColors = {
+      consumption: 'rgba(158, 242, 234, 0.8)',
+      consumption_common: 'rgba(70, 202, 218, 0.8)',
+      out: '#E4F157',
+      production_pv: '#fffb4b',
+      production_chp: '#ffc746',
+      production_water: '#3ea8f5',
+      production_wind: '#a0daf9',
+    };
+    this.nightColors = {
       consumption: 'rgba(128, 222, 234, 0.8)',
       consumption_common: 'rgba(70, 202, 218, 0.8)',
       out: '#D4E157',
@@ -29,6 +38,7 @@ export class Bubbles extends Component {
       production_water: '#1e88e5',
       production_wind: '#90caf9',
     };
+    this.colors = props.day ? this.dayColors : this.nightColors;
     this.fullWidth = null;
     this.width = null;
     this.fullHeight = null;
@@ -89,7 +99,13 @@ export class Bubbles extends Component {
   }
 
   componentDidUpdate() {
-    const { registers } = this.props;
+    const { registers, day } = this.props;
+
+    if (day) {
+      this.colors = this.dayColors;
+    } else {
+      this.colors = this.nightColors;
+    }
 
     this.fillPoints(registers);
     this.redrawData();
@@ -498,6 +514,7 @@ export class Bubbles extends Component {
       .transition()
       .ease(d3.easeExpOut)
       .duration(1000)
+      .style('stroke', this.colors['out'])
       .style('opacity', isProducing ? 1 : 0);
 
     this.outCircle
@@ -505,6 +522,7 @@ export class Bubbles extends Component {
       .transition()
       .ease(d3.easeExpOut)
       .duration(1000)
+      .style('fill', this.colors['out'])
       .style('opacity', isProducing ? 0 : 1)
       .attr('r', d => (isProducing ? this.width / 2 : this.radius(this.dataWeight)(d.value)));
 

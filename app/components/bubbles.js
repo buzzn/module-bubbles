@@ -21,13 +21,13 @@ export class Bubbles extends Component {
     this.inData = { name: 'in', children: [] };
     this.outData = [];
     this.dayColors = {
-      consumption: 'rgba(158, 242, 234, 0.8)',
-      consumption_common: 'rgba(70, 202, 218, 0.8)',
-      out: '#E4F157',
-      production_pv: '#fffb4b',
-      production_chp: '#ffc746',
-      production_water: '#3ea8f5',
-      production_wind: '#a0daf9',
+      consumption: 'rgba(88, 182, 194, 0.8)',
+      consumption_common: 'rgba(40, 182, 198, 0.8)',
+      out: '#B4C137',
+      production_pv: '#dfcb1b',
+      production_chp: '#df8706',
+      production_water: '#0e68c5',
+      production_wind: '#70aad9',
     };
     this.nightColors = {
       consumption: 'rgba(128, 222, 234, 0.8)',

@@ -75,8 +75,8 @@ function configureStore(initialState) {
     return;
   }
 
-  reactHotLoader.register(rootSaga, "rootSaga", "app/configure_store.js");
-  reactHotLoader.register(configureStore, "configureStore", "app/configure_store.js");
+  reactHotLoader.register(rootSaga, "rootSaga", "/Users/dongeolog/node_apps/buzzn/modules/bubbles/app/configure_store.js");
+  reactHotLoader.register(configureStore, "configureStore", "/Users/dongeolog/node_apps/buzzn/modules/bubbles/app/configure_store.js");
   leaveModule(module);
 })();
 

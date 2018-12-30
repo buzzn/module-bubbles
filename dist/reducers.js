@@ -66,7 +66,7 @@ exports.default = _default2;
     return;
   }
 
-  reactHotLoader.register(_default, "default", "app/reducers.js");
+  reactHotLoader.register(_default, "default", "/Users/dongeolog/node_apps/buzzn/modules/bubbles/app/reducers.js");
   leaveModule(module);
 })();
 

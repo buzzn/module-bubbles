@@ -1,5 +1,4 @@
-import { delay } from 'redux-saga';
-import { call, put, fork, take, select, race, cancel } from 'redux-saga/effects';
+import { call, put, fork, take, select, race, cancel, delay } from 'redux-saga/effects';
 import { constants, actions } from './actions';
 import api from './api';
 import { logException } from './_util';
@@ -25,7 +24,7 @@ export function* bubblesSagas({ apiUrl, apiPath, token, groupId, timeout }) {
   while (true) {
     if (groupId) {
       const { newGroupId, stopRequests } = yield race({
-        delay: call(delay, 10 * 1000),
+        delay: delay(10 * 1000),
         newGroupId: take(constants.SET_GROUP_ID),
         stopRequests: take(constants.STOP_REQUESTS),
       });

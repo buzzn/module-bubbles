@@ -37,8 +37,6 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
 
 function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; var ownKeys = Object.keys(source); if (typeof Object.getOwnPropertySymbols === 'function') { ownKeys = ownKeys.concat(Object.getOwnPropertySymbols(source).filter(function (sym) { return Object.getOwnPropertyDescriptor(source, sym).enumerable; })); } ownKeys.forEach(function (key) { _defineProperty(target, key, source[key]); }); } return target; }
 
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
@@ -47,9 +45,15 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 
 function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
 
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
+
+function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
 
 function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
 var d3 = require('d3');
 
@@ -63,7 +67,7 @@ function (_Component) {
 
     _classCallCheck(this, Bubbles);
 
-    _this = _possibleConstructorReturn(this, (Bubbles.__proto__ || Object.getPrototypeOf(Bubbles)).call(this, props));
+    _this = _possibleConstructorReturn(this, _getPrototypeOf(Bubbles).call(this, props));
     _this.inData = {
       name: 'in',
       children: []
@@ -107,7 +111,7 @@ function (_Component) {
     _this.svgDom = null;
     _this.svgD3 = null;
     ['setSize', 'fillPoints', 'dataId', 'totalWeight', 'dataWeight', 'radius', 'outCombined', 'recalculateAngles', 'drawData', 'redrawData'].forEach(function (method) {
-      _this[method] = _this[method].bind(_assertThisInitialized(_this));
+      _this[method] = _this[method].bind(_assertThisInitialized(_assertThisInitialized(_this)));
     });
     return _this;
   }
@@ -158,9 +162,9 @@ function (_Component) {
   }, {
     key: "componentDidUpdate",
     value: function componentDidUpdate() {
-      var _props = this.props,
-          registers = _props.registers,
-          day = _props.day;
+      var _this$props = this.props,
+          registers = _this$props.registers,
+          day = _this$props.day;
 
       if (day) {
         this.colors = this.dayColors;
@@ -358,12 +362,12 @@ function (_Component) {
     value: function redrawData() {
       var _this6 = this;
 
-      var _props$widgetScale = this.props.widgetScale,
-          widgetScale = _props$widgetScale === void 0 ? 1 : _props$widgetScale;
+      var _this$props$widgetSca = this.props.widgetScale,
+          widgetScale = _this$props$widgetSca === void 0 ? 1 : _this$props$widgetSca;
 
-      var _svgDom$getBoundingCl = this.svgDom.getBoundingClientRect(),
-          svgWidth = _svgDom$getBoundingCl.width,
-          svgHeight = _svgDom$getBoundingCl.height;
+      var _this$svgDom$getBound = this.svgDom.getBoundingClientRect(),
+          svgWidth = _this$svgDom$getBound.width,
+          svgHeight = _this$svgDom$getBound.height;
 
       var widgetSize = Math.min(svgWidth, svgHeight);
       this.hierarchy = d3.hierarchy(this.inData).sum(function (d) {
@@ -510,7 +514,9 @@ function (_Component) {
     }
   }, {
     key: "__reactstandin__regenerateByEval",
+    // @ts-ignore
     value: function __reactstandin__regenerateByEval(key, code) {
+      // @ts-ignore
       this[key] = eval(code);
     }
   }]);
@@ -519,14 +525,11 @@ function (_Component) {
 }(_react.Component);
 
 exports.Bubbles = Bubbles;
-Object.defineProperty(Bubbles, "propTypes", {
-  configurable: true,
-  enumerable: true,
-  writable: true,
-  value: {
-    registers: _propTypes.default.array.isRequired
-  }
+
+_defineProperty(Bubbles, "propTypes", {
+  registers: _propTypes.default.array.isRequired
 });
+
 var _default = Bubbles;
 var _default2 = _default;
 exports.default = _default2;
@@ -541,8 +544,8 @@ exports.default = _default2;
     return;
   }
 
-  reactHotLoader.register(Bubbles, "Bubbles", "app/components/bubbles.js");
-  reactHotLoader.register(_default, "default", "app/components/bubbles.js");
+  reactHotLoader.register(Bubbles, "Bubbles", "/Users/dongeolog/node_apps/buzzn/modules/bubbles/app/components/bubbles.js");
+  reactHotLoader.register(_default, "default", "/Users/dongeolog/node_apps/buzzn/modules/bubbles/app/components/bubbles.js");
   leaveModule(module);
 })();
 

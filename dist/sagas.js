@@ -7,8 +7,6 @@ exports.getGroupBubbles = getGroupBubbles;
 exports.bubblesSagas = bubblesSagas;
 exports.default = exports.getGroupId = void 0;
 
-var _reduxSaga = require("redux-saga");
-
 var _effects = require("redux-saga/effects");
 
 var _actions = require("./actions");
@@ -117,7 +115,7 @@ function bubblesSagas(_ref2) {
 
           _context2.next = 5;
           return (0, _effects.race)({
-            delay: (0, _effects.call)(_reduxSaga.delay, 10 * 1000),
+            delay: (0, _effects.delay)(10 * 1000),
             newGroupId: (0, _effects.take)(_actions.constants.SET_GROUP_ID),
             stopRequests: (0, _effects.take)(_actions.constants.STOP_REQUESTS)
           });
@@ -288,12 +286,12 @@ exports.default = _default2;
     return;
   }
 
-  reactHotLoader.register(errReporter, "errReporter", "app/sagas.js");
-  reactHotLoader.register(adminApp, "adminApp", "app/sagas.js");
-  reactHotLoader.register(getGroupId, "getGroupId", "app/sagas.js");
-  reactHotLoader.register(getGroupBubbles, "getGroupBubbles", "app/sagas.js");
-  reactHotLoader.register(bubblesSagas, "bubblesSagas", "app/sagas.js");
-  reactHotLoader.register(_default, "default", "app/sagas.js");
+  reactHotLoader.register(errReporter, "errReporter", "/Users/dongeolog/node_apps/buzzn/modules/bubbles/app/sagas.js");
+  reactHotLoader.register(adminApp, "adminApp", "/Users/dongeolog/node_apps/buzzn/modules/bubbles/app/sagas.js");
+  reactHotLoader.register(getGroupId, "getGroupId", "/Users/dongeolog/node_apps/buzzn/modules/bubbles/app/sagas.js");
+  reactHotLoader.register(getGroupBubbles, "getGroupBubbles", "/Users/dongeolog/node_apps/buzzn/modules/bubbles/app/sagas.js");
+  reactHotLoader.register(bubblesSagas, "bubblesSagas", "/Users/dongeolog/node_apps/buzzn/modules/bubbles/app/sagas.js");
+  reactHotLoader.register(_default, "default", "/Users/dongeolog/node_apps/buzzn/modules/bubbles/app/sagas.js");
   leaveModule(module);
 })();
 

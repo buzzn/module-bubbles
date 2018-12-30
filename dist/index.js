@@ -41,7 +41,7 @@ exports.default = _default2;
     return;
   }
 
-  reactHotLoader.register(_default, "default", "app/index.js");
+  reactHotLoader.register(_default, "default", "/Users/dongeolog/node_apps/buzzn/modules/bubbles/app/index.js");
   leaveModule(module);
 })();
 

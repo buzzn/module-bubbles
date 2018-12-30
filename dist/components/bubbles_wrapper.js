@@ -58,9 +58,9 @@ exports.default = _default2;
     return;
   }
 
-  reactHotLoader.register(BubblesWrapper, "BubblesWrapper", "app/components/bubbles_wrapper.js");
-  reactHotLoader.register(mapStateToProps, "mapStateToProps", "app/components/bubbles_wrapper.js");
-  reactHotLoader.register(_default, "default", "app/components/bubbles_wrapper.js");
+  reactHotLoader.register(BubblesWrapper, "BubblesWrapper", "/Users/dongeolog/node_apps/buzzn/modules/bubbles/app/components/bubbles_wrapper.js");
+  reactHotLoader.register(mapStateToProps, "mapStateToProps", "/Users/dongeolog/node_apps/buzzn/modules/bubbles/app/components/bubbles_wrapper.js");
+  reactHotLoader.register(_default, "default", "/Users/dongeolog/node_apps/buzzn/modules/bubbles/app/components/bubbles_wrapper.js");
   leaveModule(module);
 })();
 

@@ -207,14 +207,14 @@ function formatLabel(value, type) {
     return;
   }
 
-  reactHotLoader.register(req, "req", "app/_util.js");
-  reactHotLoader.register(prepareHeaders, "prepareHeaders", "app/_util.js");
-  reactHotLoader.register(parseResponse, "parseResponse", "app/_util.js");
-  reactHotLoader.register(camelizeResponseArray, "camelizeResponseArray", "app/_util.js");
-  reactHotLoader.register(camelizeResponseKeys, "camelizeResponseKeys", "app/_util.js");
-  reactHotLoader.register(logException, "logException", "app/_util.js");
-  reactHotLoader.register(formatNumber, "formatNumber", "app/_util.js");
-  reactHotLoader.register(formatLabel, "formatLabel", "app/_util.js");
+  reactHotLoader.register(req, "req", "/Users/dongeolog/node_apps/buzzn/modules/bubbles/app/_util.js");
+  reactHotLoader.register(prepareHeaders, "prepareHeaders", "/Users/dongeolog/node_apps/buzzn/modules/bubbles/app/_util.js");
+  reactHotLoader.register(parseResponse, "parseResponse", "/Users/dongeolog/node_apps/buzzn/modules/bubbles/app/_util.js");
+  reactHotLoader.register(camelizeResponseArray, "camelizeResponseArray", "/Users/dongeolog/node_apps/buzzn/modules/bubbles/app/_util.js");
+  reactHotLoader.register(camelizeResponseKeys, "camelizeResponseKeys", "/Users/dongeolog/node_apps/buzzn/modules/bubbles/app/_util.js");
+  reactHotLoader.register(logException, "logException", "/Users/dongeolog/node_apps/buzzn/modules/bubbles/app/_util.js");
+  reactHotLoader.register(formatNumber, "formatNumber", "/Users/dongeolog/node_apps/buzzn/modules/bubbles/app/_util.js");
+  reactHotLoader.register(formatLabel, "formatLabel", "/Users/dongeolog/node_apps/buzzn/modules/bubbles/app/_util.js");
   leaveModule(module);
 })();
 

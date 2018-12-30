@@ -51,7 +51,7 @@ if (module.hot) {
     return;
   }
 
-  reactHotLoader.register(render, "render", "app/index.dev.js");
+  reactHotLoader.register(render, "render", "/Users/dongeolog/node_apps/buzzn/modules/bubbles/app/index.dev.js");
   leaveModule(module);
 })();
 

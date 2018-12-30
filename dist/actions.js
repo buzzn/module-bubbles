@@ -79,8 +79,8 @@ exports.actions = actions;
     return;
   }
 
-  reactHotLoader.register(constants, "constants", "app/actions.js");
-  reactHotLoader.register(actions, "actions", "app/actions.js");
+  reactHotLoader.register(constants, "constants", "/Users/dongeolog/node_apps/buzzn/modules/bubbles/app/actions.js");
+  reactHotLoader.register(actions, "actions", "/Users/dongeolog/node_apps/buzzn/modules/bubbles/app/actions.js");
   leaveModule(module);
 })();
 

@@ -55,7 +55,7 @@ exports.default = _default2;
     return;
   }
 
-  reactHotLoader.register(_default, "default", "app/components/bubbles_layout.js");
+  reactHotLoader.register(_default, "default", "/Users/dongeolog/node_apps/buzzn/modules/bubbles/app/components/bubbles_layout.js");
   leaveModule(module);
 })();
 

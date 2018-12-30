@@ -1,11 +1,18 @@
 {
   "presets": [
-    ["@babel/env", {
-      "targets": {
-        "browsers": ["last 2 versions", "safari >= 7"],
-        "modules": false
+    [
+      "@babel/preset-env",
+      {
+        "targets": {
+          "browsers": [
+            "last 1 version",
+            "ie 11",
+            "> 1%"
+          ]
+        },
+        "modules": "commonjs"
       }
-    }],
+    ],
     "@babel/react"
   ],
   "plugins": [
